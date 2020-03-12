@@ -55,11 +55,14 @@ The benchmarks below are on a quite old, first generation i7 laptop. If you try 
 
 The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr` and `sqldf`.
 
-`duckdf()` is significantly faster than `sqldf`, faster than `dbplyr`, even allowing for a dbplyr database connection setup in advance, not quite as fast as `dplyr` and much, much slower than `data.table`.
+`duckdf()` is significantly faster than `sqldf`, about as fast as `dbplyr`, even allowing for a dbplyr database connection setup in advance, not as fast as `dplyr` and much, much slower than `data.table`.
 
-`duckdf_persist()` just about matches `dplyr`, even when considering the first iteration to write the database to disk will be as slow as `duckdf()`.
+`duckdf_persist()` is faster than `duckdf()`, after the first run, as the dataframe does not need to be written to a new database every iteration.
+
+If the `duckdf` functions were written in such a way that the `duckdb` database connections weren't closed, the results would be returned even faster, but this results in a pond full of warning messages.
 
 ```r
+library(duckdf)
 library(dplyr)
 library(microbenchmark)
 library(sqldf)
@@ -92,7 +95,7 @@ autoplot(duck_bench)
 
 ```
 
-<img align="center" src="duckdf_benchmarks.png" height="471">
+<img align="center" src="duckdf_benchmarks.png" height="522">
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, may produce entirely different results.
 

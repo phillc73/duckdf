@@ -20,9 +20,12 @@ con <- dbConnect(duckdb::duckdb(), ":memory:")
 dbWriteTable(con, paste(from_df), get(from_df))
 
 # execute required SQL query against the new DuckDB table
-return(dbGetQuery(con, query))
+statement_result <- dbGetQuery(con, query)
 
 # close the connection
 dbDisconnect(con, shutdown = TRUE)
+
+# return results
+return(statement_result)
 
 }

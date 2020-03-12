@@ -5,8 +5,7 @@ Version: 0.1.0
 Date: 2020-03-12
 Author: Phill Clarke
 Maintainer: Phill Clarke <phill@fastmail.com>
-Description: Like SQL? Like dataframes? Like ducks?
-Then duckdf is for you.
+Description: Like SQL? Like dataframes? Like ducks? Then duckdf is for you.
 Depends:
     R (>= 3.6.3)
 License: GPLv3 + file LICENCE

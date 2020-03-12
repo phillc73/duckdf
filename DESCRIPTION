@@ -2,10 +2,21 @@ Package: duckdf
 Type: Package
 Title: SQL for Dataframes, But With Ducks
 Version: 0.1.0
+Date: 2020-03-12
 Author: Phill Clarke
-Maintainer: Phill Clarke<phill@fastmail.com>
+Maintainer: Phill Clarke <phill@fastmail.com>
 Description: Like SQL? Like dataframes? Like ducks?
 Then duckdf is for you.
+Depends:
+    R (>= 3.6.3)
 License: GPLv3
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/phillc73/duckdf
+BugReports: http://www.github.com/phillc73/duckdf/issues
+Imports:
+    DBI (>= 1.1.0),
+    stringi (>= 1.4.6)
+    duckdb (>= 0.1.4)
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1

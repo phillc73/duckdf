@@ -1,9 +1,6 @@
 library(dplyr)
 library(microbenchmark)
 library(sqldf)
-library(compiler)
-library(duckdb)
-library(DBI)
 library(data.table)
 library(ggplot2)
 

@@ -91,11 +91,8 @@ duck_bench <- microbenchmark(times=500,
 autoplot(duck_bench)
 
 ```
-<p align="center">
 
-![duckdf benchmarks pic][https://github.com/phillc73/duckdf/blob/master/duckdf_benchmarks.png]
-
-</p>
+<img align="center" src="duckdf_benchmarks.png" height="471">
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, may produce entirely different results.
 

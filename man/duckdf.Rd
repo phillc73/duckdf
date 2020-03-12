@@ -2,7 +2,7 @@
 \alias{duckdf}
 \title{duckdf}
 \usage{
-duckdf()
+duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 }
 \description{
 Like SQL for dataframes, but with ducks.

@@ -1,7 +1,3 @@
-library(duckdb)
-library(DBI)
-library(stringi)
-
 ########
 
 # duckdb()

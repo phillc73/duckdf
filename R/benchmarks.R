@@ -31,7 +31,3 @@ duck_bench <- microbenchmark(times=50,
 )
 
 autoplot(duck_bench)
-
-duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
-
-duckdf_cleanup("mtcars")

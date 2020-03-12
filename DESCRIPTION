@@ -1,0 +1,11 @@
+Package: duckdf
+Type: Package
+Title: SQL for Dataframes, But With Ducks
+Version: 0.1.0
+Author: Phill Clarke
+Maintainer: Phill Clarke<phill@fastmail.com>
+Description: Like SQL? Like dataframes? Like ducks?
+Then duckdf is for you.
+License: GPLv3
+Encoding: UTF-8
+LazyData: true

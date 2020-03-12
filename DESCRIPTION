@@ -14,8 +14,8 @@ LazyData: true
 URL: https://github.com/phillc73/duckdf
 BugReports: http://www.github.com/phillc73/duckdf/issues
 Imports:
-    DBI (>= 1.1.0),
-    stringi (>= 1.4.6),
-    duckdb (>= 0.1.4)
+    DBI,
+    stringi,
+    duckdb
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1

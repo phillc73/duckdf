@@ -1,10 +1,3 @@
-########
-
-# duckdb()
-# query <- paste('SELECT "Species", MIN("Sepal.Width") FROM iris GROUP BY "Species"')
-
-########
-
 duckdf <- function(query = ""){
 
 # Extract dataframe name using sting splits

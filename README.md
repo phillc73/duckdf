@@ -93,7 +93,7 @@ autoplot(duck_bench)
 ```
 <p align="center">
 
-![duckdf benchmarks pic][duckdf_benchmarks.png]
+![duckdf benchmarks pic][https://github.com/phillc73/duckdf/blob/master/duckdf_benchmarks.png]
 
 </p>
 

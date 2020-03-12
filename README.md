@@ -1,4 +1,4 @@
-Ducks all the way down
+🦆 Ducks all the way down
 =======
 
 This is a convenience package for everyone who has a deep and abiding love affair with SQL (and ducks).

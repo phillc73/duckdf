@@ -16,7 +16,7 @@ duckdf_variant <- function(query = ""){
   duckdb::duckdb_register(con, paste(from_df_view), get(from_df))
 
   # re-write query to use dataframe_view
-  qsplit_view <- stri_replace_all_fixed(query_split[2], paste(from_df), paste(from_df_view))
+  qsplit_view <- stringi::stri_replace_all_fixed(query_split[2], paste(from_df), paste(from_df_view))
   query_view <- paste(query_split[1], "FROM", qsplit_view)
 
   # execute required SQL query against the new DuckDB table

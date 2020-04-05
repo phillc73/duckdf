@@ -56,11 +56,7 @@ The benchmarks below are on a quite old, first generation i7 laptop. If you try 
 
 The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr` and `sqldf`.
 
-`duckdf()` is significantly faster than `sqldf`, about as fast as `dbplyr`, even allowing for a dbplyr database connection setup in advance, not as fast as `dplyr` and much, much slower than `data.table`.
-
-`duckdf_persist()` is faster than `duckdf()`, after the first run, as the dataframe does not need to be written to a new database every iteration.
-
-If the `duckdf` functions were written in such a way that the `duckdb` database connections weren't closed, the results would be returned even faster, but this results in a pond full of warning messages.
+`duckdf()` is significantly faster than `sqldf`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`.
 
 ```r
 library(duckdf)

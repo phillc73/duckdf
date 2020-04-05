@@ -16,6 +16,7 @@ install.packages("duckdb",
                         repos=c("http://download.duckdb.org/alias/master/rstats/", 
                         "http://cran.rstudio.com"))
 ```
+At least version 0.1.6 is required.
 
 Then install install `duckdf` with `devtools`
 
@@ -33,14 +34,14 @@ Write "normal" SQL in an R function:
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
 
-This creates a single-use in-memory `duckdb` database from the well known `mtcars` dataset, then selects just the columns `mpg` and `cyl`, where the `disp` column is greater than 200.
+This registers the well known `mtcars` dataset as a virtual table in the `duckdb` database, then selects just the columns `mpg` and `cyl`, where the `disp` column is greater than 200.
 
-In reality, this function is just a simple wrapper around a collection of `DBI` functions, such as `dbConnect()`, `dbWriteTable()`, `dbGetQuery()` and `dbDisconnect()`
+In reality, this function is just a simple wrapper around a collection of `DBI` functions, such as `dbConnect()`, `dbGetQuery()`, `dbDisconnect()` and the `duckdb` function `duckdb_register`.
 
 ```r
 duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
-The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. If you intend to use the same dataset multiple times, this is the way to go. After the first SQL statement, where the persistent database is created, subsequent SQL statements will be much quicker, as the original dataframe does not need to be copied to a `duckdb`.
+The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. This function currently remains in the package, but is not really useful now that `duckdb` supports registering virtual tables from dataframes.
 
 ```r
 duckdf_cleanup("mtcars")
@@ -79,14 +80,14 @@ mtcars_db <-
 
 # Run the benchmark as often as you like
 duck_bench <- microbenchmark(times=500,
-                             sqldf_out <- sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
-                             duckdf_out <- duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
-                             duckdf_out_pers <- duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
-                             dplyr_out <- mtcars %>%
+                             sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             mtcars_data_table[disp >= 200, c("mpg", "cyl"),],
+                             mtcars %>%
                                dplyr::filter(disp >= 200) %>%
                                dplyr::select(mpg,cyl),
-                             data_table_out <- mtcars_data_table[disp >= 200, c("mpg", "cyl"),],
-                             mtcars_db <- tbl(dsrc, "mtcars") %>%
+                             tbl(dsrc, "mtcars") %>%
                                dplyr::filter(disp >= 200) %>%
                                dplyr::select(mpg,cyl)
                             )

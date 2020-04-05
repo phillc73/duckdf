@@ -9,8 +9,8 @@ from_df <- stringi::stri_extract_first_words(query_split[2], locale = NULL)
 # create a DuckDB connection, either as a temporary in-memory database (default) or with a file
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-# write a data.frame to the database
-DBI::dbWriteTable(con, paste(from_df), get(from_df))
+# register a dataframe view in duckdb
+duckdb::duckdb_register(con, paste(from_df), get(from_df))
 
 # execute required SQL query against the new DuckDB table
 statement_result <- DBI::dbGetQuery(con, query)

@@ -3,7 +3,7 @@ duckdf_persist <- function(query = ""){
   # Extract dataframe name using sting splits
   query_split <- stringi::stri_split_fixed(query, "FROM",
                                            omit_empty=TRUE,
-                                           opts_fixed=stri_opts_fixed(case_insensitive=TRUE))
+                                           opts_fixed=stringi::stri_opts_fixed(case_insensitive=TRUE))
 
   query_split <- trimws(unlist(query_split))
 

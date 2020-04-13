@@ -78,6 +78,7 @@ mtcars_db <-
 duck_bench <- microbenchmark(times=500,
                              sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
                              duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             duckdf_variant("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
                              duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
                              mtcars_data_table[disp >= 200, c("mpg", "cyl"),],
                              mtcars %>%

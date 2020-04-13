@@ -7,8 +7,8 @@ Author: Phill Clarke
 Maintainer: Phill Clarke <phill@fastmail.com>
 Description: Like SQL? Like dataframes? Like ducks? Then duckdf is for you.
 Depends:
-    R (>= 3.6.3)
-License: GPLv3 | file LICENSE
+    R (>= 3.6.0)
+License: GPL-3 | file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/phillc73/duckdf

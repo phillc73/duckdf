@@ -1,4 +1,4 @@
-duckdf <- function(query = ""){
+duckdf_register <- function(query = ""){
 
 # Extract dataframe name using sting splits
 query_split <- stringi::stri_split_fixed(query, "FROM", omit_empty=TRUE)

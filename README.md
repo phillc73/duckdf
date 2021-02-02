@@ -9,26 +9,25 @@ It's also meant to be a bit of fun.
 
 ## Quick Start
 
-To install this package, first install the very experimental [duckdb](https://github.com/cwida/duckdb):
+To install this package, first install [duckdb](https://duckdb.org/):
 
 ```r
-install.packages("duckdb", 
-                        repos=c("http://download.duckdb.org/alias/master/rstats/", 
-                        "http://cran.rstudio.com"))
+install.packages("duckdb")
 ```
-At least version 0.1.6 is required.
+This package has been tested against the 0.2.3 version of `duckdb`
 
 Then install install `duckdf` with `devtools`
 
 ```r
-# install.packages("devtools")
+# install.packages("remotes")
+library("remotes")
 devtools::install_github("phillc73/duckdf")
 library("duckdf")
 ```
 
 ## Usage
 
-Write "normal" SQL in an R function:
+If you want to write "normal" SQL SELECT statements in an R function, against an existing dataframe:
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
@@ -41,7 +40,7 @@ In reality, this function is just a simple wrapper around a collection of `DBI` 
 ```r
 duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
-The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. This function currently remains in the package, but is not really useful now that `duckdb` supports registering virtual tables from dataframes.
+The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. 
 
 ```r
 duckdf_cleanup("mtcars")
@@ -52,13 +51,16 @@ This simply removes all traces of the `duckdb` called `mtcars` from the current 
 
 Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good.
 
-The benchmarks below are on a quite old, first generation i7 laptop. If you try these numbers yourself, the results will differ but the general themes should remain the same.
+The benchmarks below are generated on a laptiop with an i7-8565U CPU. If you try these numbers yourself, the results will differ but the general themes should remain the same.
 
 The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr` and `sqldf`.
 
 `duckdf()` is significantly faster than `sqldf`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`.
 
+`duckdf_persist()` is slow because it writes and then reads a `duckdf` database to disk on each iteration.
+
 ```r
+library(duckdb)
 library(duckdf)
 library(dplyr)
 library(microbenchmark)
@@ -69,10 +71,24 @@ library(ggplot2)
 # Make a data.table
 mtcars_data_table <- data.table(mtcars)
 
-# dbplyr db prep
-dsrc <- duckdb::src_duckdb()
-mtcars_db <-
-  copy_to(dsrc, mtcars, "mtcars", temporary = FALSE)
+# dbplyr test function
+dbplyr_test <- function() {
+
+    con <- dbConnect(duckdb::duckdb(), ":memory:")
+
+    copy_to(con, mtcars, "mtcars_dbplyr", temporary = FALSE)
+
+    mtcars_db <- tbl(con, "mtcars_dbplyr")
+
+    DBI::dbDisconnect(con, shutdown = TRUE)
+
+    mtcars_result <- mtcars_db %>%
+    dplyr::filter(disp >= 200) %>%
+    dplyr::select(mpg,cyl)
+
+    return(mtcars_result)
+
+}
 
 # Run the benchmark as often as you like
 duck_bench <- microbenchmark(times=500,
@@ -83,13 +99,10 @@ duck_bench <- microbenchmark(times=500,
                              mtcars %>%
                                dplyr::filter(disp >= 200) %>%
                                dplyr::select(mpg,cyl),
-                             tbl(dsrc, "mtcars") %>%
-                               dplyr::filter(disp >= 200) %>%
-                               dplyr::select(mpg,cyl)
+                             dbplyr_test()
                             )
 
 autoplot(duck_bench)
-
 ```
 
 <img align="center" src="duckdf_benchmarks.png" height="522">

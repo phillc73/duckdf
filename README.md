@@ -16,12 +16,12 @@ install.packages("duckdb")
 ```
 This package has been tested against the 0.2.3 version of `duckdb`
 
-Then install install `duckdf` with `devtools`
+Then install `duckdf` with the `remotes` package.
 
 ```r
 # install.packages("remotes")
 library("remotes")
-devtools::install_github("phillc73/duckdf")
+remotes::install_github("phillc73/duckdf")
 library("duckdf")
 ```
 

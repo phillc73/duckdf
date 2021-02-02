@@ -55,7 +55,7 @@ The benchmarks below are generated on a laptiop with an i7-8565U CPU. If you try
 
 The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr` and `sqldf`.
 
-`duckdf()` is significantly faster than `sqldf`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`.
+`duckdf()` is significantly faster than `sqldf` and `tidyquery`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`.
 
 `duckdf_persist()` is slow because it writes and then reads a `duckdf` database to disk on each iteration.
 
@@ -63,9 +63,11 @@ The current `duckdf` SELECT functions have been vaguely tested against other pop
 library(duckdb)
 library(duckdf)
 library(dplyr)
+library(dbplyr)
 library(microbenchmark)
 library(sqldf)
 library(data.table)
+library(tidyquery)
 library(ggplot2)
 
 # Make a data.table
@@ -73,7 +75,6 @@ mtcars_data_table <- data.table(mtcars)
 
 # dbplyr test function
 dbplyr_test <- function() {
-
     con <- dbConnect(duckdb::duckdb(), ":memory:")
 
     copy_to(con, mtcars, "mtcars_dbplyr", temporary = FALSE)
@@ -92,20 +93,27 @@ dbplyr_test <- function() {
 
 # Run the benchmark as often as you like
 duck_bench <- microbenchmark(times=500,
+                             # sqldf library
                              sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             # tidyquery library
+                             query("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             # duckdf library
                              duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
                              duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             # data.table library
                              mtcars_data_table[disp >= 200, c("mpg", "cyl"),],
+                             # dplyr library
                              mtcars %>%
                                dplyr::filter(disp >= 200) %>%
                                dplyr::select(mpg,cyl),
+                             # dbplyr library
                              dbplyr_test()
                             )
 
 autoplot(duck_bench)
 ```
 
-<img align="center" src="duckdf_benchmarks.png" height="522">
+<img align="center" src="duckdf_benchmarks.png" width = "1024">
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, may produce entirely different results.
 

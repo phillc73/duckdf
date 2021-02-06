@@ -14,7 +14,7 @@ To install this package, first install [duckdb](https://duckdb.org/):
 ```r
 install.packages("duckdb")
 ```
-This package has been tested against the 0.2.3 version of `duckdb`
+This package has been tested against the 0.2.4 version of `duckdb`
 
 Then install `duckdf` with the `remotes` package.
 
@@ -53,7 +53,7 @@ Is this package any good? If some measure of good is the speed at which results 
 
 The benchmarks below are generated on a laptiop with an i7-8565U CPU. If you try these numbers yourself, the results will differ but the general themes should remain the same.
 
-The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr` and `sqldf`.
+The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr`, `tidyquery` and `sqldf`.
 
 `duckdf()` is significantly faster than `sqldf` and `tidyquery`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`.
 

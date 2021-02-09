@@ -53,9 +53,9 @@ Is this package any good? If some measure of good is the speed at which results 
 
 The benchmarks below are generated on a laptiop with an i7-8565U CPU. If you try these numbers yourself, the results will differ but the general themes should remain the same.
 
-The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr`, `tidyquery` and `sqldf`.
+The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr`, `dbplyr`, `tidyquery` and `sqldf`.
 
-`duckdf()` is significantly faster than `sqldf` and `tidyquery`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`.
+`duckdf()` is significantly faster than `sqldf` and `tidyquery`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`. In fact, if you'd like to query a `data.table` more slowly, `duckdf` can support that too.
 
 `duckdf_persist()` is slow because it writes and then reads a `duckdf` database to disk on each iteration.
 

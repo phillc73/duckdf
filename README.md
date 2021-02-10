@@ -57,16 +57,22 @@ The current `duckdf` SELECT functions have been vaguely tested against other pop
 
 Coinsidering only simple queries, `duckdf()` is significantly faster than `sqldf` and `tidyquery`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`. In fact, if you'd like to query a `data.table` more slowly, `duckdf` can support that too.
 
-`duckdf_persist()` is slow because it writes and then reads a `duckdf` database to disk on each iteration.
+`duckdf_persist()` is slow because it writes or reads a `duckdf` database to disk on each iteration.
 
 ```r
+# duckdb v0.2.4
 library(duckdb)
 library(duckdf)
+# dplyr 1.0.3
 library(dplyr)
+# dbplyr 2.0.0
 library(dbplyr)
 library(microbenchmark)
+# sqldf 0.4-11
 library(sqldf)
+# data.table 1.13.7
 library(data.table)
+# tidyquery 0.2.1
 library(tidyquery)
 library(ggplot2)
 
@@ -94,20 +100,20 @@ dbplyr_test <- function() {
 # Run the benchmark as often as you like
 duck_bench <- microbenchmark(times=500,
                              # sqldf library
-                             sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             sqldf = {sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
                              # tidyquery library
-                             query("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             tidyquery =  {query("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
                              # duckdf library
-                             duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
-                             duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200"),
+                             duckdf = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
+                             duckdf_persist = {duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
                              # data.table library
-                             mtcars_data_table[disp >= 200, c("mpg", "cyl"),],
+                             data_table = {mtcars_data_table[disp >= 200, c("mpg", "cyl"),]},
                              # dplyr library
-                             mtcars %>%
+                             dplyr = {mtcars %>%
                                dplyr::filter(disp >= 200) %>%
-                               dplyr::select(mpg,cyl),
+                               dplyr::select(mpg,cyl)},
                              # dbplyr library
-                             dbplyr_test()
+                             dbplyr = {dbplyr_test()}
                             )
 
 autoplot(duck_bench)
@@ -118,9 +124,12 @@ autoplot(duck_bench)
 But wait, there's more. A more complex query benchmark, this time compared to `tidyquery` using the SQL example from their [README page](https://github.com/ianmcook/tidyquery), and the `dplyr` equivalent generated through the `tidyquery` `show_dplyr()` function. The result is different and the `duckdb` and `duckdf` combination appear to be quickest.
 
 ```r
+# duckdb 0.2.4
 library(duckdb)
 library(duckdf)
+# dplyr 1.0.3
 library(dplyr)
+# tidyquery 0.2.1
 library(tidyquery)
 library(microbenchmark)
 library(ggplot2)
@@ -128,8 +137,8 @@ library(nycflights13)
 
 vs_tidyquery <- microbenchmark(times = 500,
 
-# tidyquery SQL
-tidyquery::query(
+tidyquery = {
+  tidyquery::query(
 "SELECT origin, dest,
     COUNT(flight) AS num_flts,
     round(SUM(seats)) AS num_seats,
@@ -142,10 +151,11 @@ tidyquery::query(
   HAVING num_flts > 3000
   ORDER BY num_seats DESC, avg_delay ASC
   LIMIT 2;"
-    ),
+                  )
+            },
 
-# duckdf SQL
-duckdf(
+duckdf = {
+  duckdf(
 "SELECT origin, dest,
     COUNT(flight) AS num_flts,
     round(SUM(seats)) AS num_seats,
@@ -158,27 +168,29 @@ duckdf(
   HAVING COUNT(flight) > 3000
   ORDER BY num_seats DESC, avg_delay ASC
   LIMIT 2;"
-    ),
+        )
+          },
 
-# dplyr
-flights %>%
-  left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
-  rename(f.year = "year.f", p.year = "year.p") %>%
-  filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
-  group_by(origin, dest) %>%
-  filter(sum(!is.na(flight)) > 3000) %>%
-  summarise(num_flts = sum(!is.na(flight)), 
-            num_seats = round(sum(seats, na.rm = TRUE)), 
-            avg_delay = round(mean(arr_delay, 
-            na.rm = TRUE))) %>%
-  ungroup() %>%
-  arrange(dplyr::desc(num_seats), avg_delay) %>%
-  head(2)
-)
+dplyr = {
+  flights %>%
+    left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
+    rename(f.year = "year.f", p.year = "year.p") %>%
+    filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
+    group_by(origin, dest) %>%
+    filter(sum(!is.na(flight)) > 3000) %>%
+    summarise(num_flts = sum(!is.na(flight)), 
+              num_seats = round(sum(seats, na.rm = TRUE)), 
+              avg_delay = round(mean(arr_delay, 
+              na.rm = TRUE))) %>%
+    ungroup() %>%
+    arrange(dplyr::desc(num_seats), avg_delay) %>%
+    head(2)
+        }
+                        )
 
 autoplot(vs_tidyquery)
 ```
-<img align="center" src="vs_tidyquery_benchmark.png" width = "1024">
+<img align="center" src="vs_tidyquery_benchmarks.png" width = "1024">
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results.
 

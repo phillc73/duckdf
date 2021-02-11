@@ -137,56 +137,56 @@ library(nycflights13)
 
 vs_tidyquery <- microbenchmark(times = 500,
 
-tidyquery = {
-  tidyquery::query(
-"SELECT origin, dest,
-    COUNT(flight) AS num_flts,
-    round(SUM(seats)) AS num_seats,
-    round(AVG(arr_delay)) AS avg_delay
-  FROM flights f LEFT OUTER JOIN planes p
-    ON f.tailnum = p.tailnum
-  WHERE distance BETWEEN 200 AND 300
-    AND air_time IS NOT NULL
-  GROUP BY origin, dest
-  HAVING num_flts > 3000
-  ORDER BY num_seats DESC, avg_delay ASC
-  LIMIT 2;"
-                  )
-            },
+                                          tidyquery = {
+                                            tidyquery::query(
+                                          "SELECT origin, dest,
+                                              COUNT(flight) AS num_flts,
+                                              round(SUM(seats)) AS num_seats,
+                                              round(AVG(arr_delay)) AS avg_delay
+                                            FROM flights f LEFT OUTER JOIN planes p
+                                              ON f.tailnum = p.tailnum
+                                            WHERE distance BETWEEN 200 AND 300
+                                              AND air_time IS NOT NULL
+                                            GROUP BY origin, dest
+                                            HAVING num_flts > 3000
+                                            ORDER BY num_seats DESC, avg_delay ASC
+                                            LIMIT 2;"
+                                                            )
+                                                      },
 
-duckdf = {
-  duckdf(
-"SELECT origin, dest,
-    COUNT(flight) AS num_flts,
-    round(SUM(seats)) AS num_seats,
-    round(AVG(arr_delay)) AS avg_delay
-  FROM flights f LEFT OUTER JOIN planes p
-    ON f.tailnum = p.tailnum
-  WHERE distance BETWEEN 200 AND 300
-    AND air_time IS NOT NULL
-  GROUP BY origin, dest
-  HAVING COUNT(flight) > 3000
-  ORDER BY num_seats DESC, avg_delay ASC
-  LIMIT 2;"
-        )
-          },
+                                          duckdf = {
+                                            duckdf(
+                                          "SELECT origin, dest,
+                                              COUNT(flight) AS num_flts,
+                                              round(SUM(seats)) AS num_seats,
+                                              round(AVG(arr_delay)) AS avg_delay
+                                            FROM flights f LEFT OUTER JOIN planes p
+                                              ON f.tailnum = p.tailnum
+                                            WHERE distance BETWEEN 200 AND 300
+                                              AND air_time IS NOT NULL
+                                            GROUP BY origin, dest
+                                            HAVING COUNT(flight) > 3000
+                                            ORDER BY num_seats DESC, avg_delay ASC
+                                            LIMIT 2;"
+                                                  )
+                                                    },
 
-dplyr = {
-  flights %>%
-    left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
-    rename(f.year = "year.f", p.year = "year.p") %>%
-    filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
-    group_by(origin, dest) %>%
-    filter(sum(!is.na(flight)) > 3000) %>%
-    summarise(num_flts = sum(!is.na(flight)), 
-              num_seats = round(sum(seats, na.rm = TRUE)), 
-              avg_delay = round(mean(arr_delay, 
-              na.rm = TRUE))) %>%
-    ungroup() %>%
-    arrange(dplyr::desc(num_seats), avg_delay) %>%
-    head(2)
-        }
-                        )
+                                          dplyr = {
+                                            flights %>%
+                                              left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
+                                              rename(f.year = "year.f", p.year = "year.p") %>%
+                                              filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
+                                              group_by(origin, dest) %>%
+                                              filter(sum(!is.na(flight)) > 3000) %>%
+                                              summarise(num_flts = sum(!is.na(flight)), 
+                                                        num_seats = round(sum(seats, na.rm = TRUE)), 
+                                                        avg_delay = round(mean(arr_delay, 
+                                                        na.rm = TRUE))) %>%
+                                              ungroup() %>%
+                                              arrange(dplyr::desc(num_seats), avg_delay) %>%
+                                              head(2)
+                                                  }
+                                )
 
 autoplot(vs_tidyquery)
 ```

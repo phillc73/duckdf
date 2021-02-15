@@ -1,7 +1,7 @@
 duckdf <- function(query = "") {
 
 # create a DuckDB connection, either as a temporary in-memory database (default)
-con <- DBI::dbConnect(duckdb::duckdb(), ":memory:", read_only = FALSE)
+con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 
 # Extract dataframe name using sting splits
 query_split <- stringi::stri_split_fixed(query, "FROM",

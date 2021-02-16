@@ -47,6 +47,13 @@ duckdf_cleanup("mtcars")
 ```
 This simply removes all traces of the `duckdb` called `mtcars` from the current working directory.
 
+This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have:
+
+```r
+duckdf_ingest(name = "tablename", files = "filename.csv", persist = TRUE)
+```
+The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database with table name, `tablename`, and save it to disk. This data can then be queried with `duckdf_persist()`. If `persist = FALSE`, only a virtual `duckdb` table is created and then `duckdf()` used to query it directly.
+
 ## Benchmarks
 
 Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good.

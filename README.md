@@ -37,17 +37,35 @@ This registers the well known `mtcars` dataset as a virtual table in the `duckdb
 
 In reality, this function is just a simple wrapper around a collection of `DBI` functions, such as `dbConnect()`, `dbGetQuery()`, `dbDisconnect()` and the `duckdb` function `duckdb_register`.
 
+Joins of up to two dataframes are supported. See the `nycflights13` benchmark example below for such an SQL query.
+
 ```r
 duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
-The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. 
+The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the dataframe name.
+
+However, it is also possible to define a specific on-disk database name.
+
+```r
+duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+                db_name = "mt_cars")
+```
+
+It is also possible to use the main `duckdf()` function to write a database to disk
+
+```r
+duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+       persist = TRUE)
+```
+It is not currently possible to define the database name using only `duckdf()`. The on-disk database defaults to the name of the first dataframe included in the query.
+
+This following function simply removes all traces of the `duckdb` called `mtcars` from the current working directory.
 
 ```r
 duckdf_cleanup("mtcars")
 ```
-This simply removes all traces of the `duckdb` called `mtcars` from the current working directory.
 
-This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have:
+This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf_ingest()`
 
 ```r
 duckdf_ingest(name = "tablename", files = "filename.csv", persist = TRUE)

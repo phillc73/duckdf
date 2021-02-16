@@ -21,7 +21,7 @@ query_split_second <- stringi::stri_split_fixed(query, "JOIN",
 
 query_split_second <- trimws(unlist(query_split_second))
 
-from_df_second =  <- stringi::stri_extract_first_words(query_split_second[2],
+from_df_second <- stringi::stri_extract_first_words(query_split_second[2],
                                                     locale = NULL)
                   }
 

@@ -1,12 +1,12 @@
 duckdf <- function(query = "",
-                                persist = FALSE) {
+                   persist = FALSE) {
 
-if (persist == TRUE){
+if (persist == TRUE) {
 
     duckdf_persist(query)
 
 } else {
-    
+
 # create a DuckDB connection, either as a temporary in-memory database (default)
 con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 

@@ -1,5 +1,5 @@
 duckdf_ingest <- function(name,
-                          files,
+                          file,
                           persist = TRUE) {
 
 if (persist == TRUE) {
@@ -8,7 +8,7 @@ if (persist == TRUE) {
     con <- DBI::dbConnect(duckdb::duckdb(), paste(name))
 
     # read in the csv to a duckdb table
-    duckdb::duckdb_read_csv(con, name = name, files = files)
+    duckdb::duckdb_read_csv(con, name = name, files = file)
 
     # close the connection
     DBI::dbDisconnect(con, shutdown = TRUE)
@@ -19,7 +19,7 @@ if (persist == TRUE) {
 con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 
 # read in the csv to a duckdb table
-duckdb::duckdb_read_csv(con, name = name, files = files)
+duckdb::duckdb_read_csv(con, name = name, files = file)
 
 # read the data back to a dataframe
 df_name <- DBI::dbReadTable(con, paste(name))

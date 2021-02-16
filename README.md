@@ -68,9 +68,13 @@ duckdf_cleanup("mtcars")
 This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf_ingest()`
 
 ```r
-duckdf_ingest(name = "tablename", files = "filename.csv", persist = TRUE)
+duckdf_ingest(name = "descriptive_name", 
+              file = "filename.csv", 
+              persist = TRUE)
 ```
-The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database with table name, `tablename`, and save it to disk. This data can then be queried with `duckdf_persist()`. If `persist = FALSE`, only a virtual `duckdb` table is created and then `duckdf()` used to query it directly.
+The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database named, `descriptive_name`, and save it to disk. The single table in the database will also be called `descriptive_name`. This data can then be queried with `duckdf_persist()`. 
+
+If `persist = FALSE`, only a dataframe in the global environment is created, via a `duckdb` virtual table intermediate, and then `duckdf()` may be used to query it directly.
 
 ## Benchmarks
 

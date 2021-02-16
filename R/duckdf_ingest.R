@@ -1,4 +1,19 @@
-duckdf_ingest <- function(name, files) {
+duckdf_ingest <- function(name,
+                          files,
+                          persist = TRUE) {
+
+if (persist == TRUE) {
+
+       # open db connection
+    con <- DBI::dbConnect(duckdb::duckdb(), paste(name))
+
+    # read in the csv to a duckdb table
+    duckdb::duckdb_read_csv(con, name = name, files = files)
+
+    # close the connection
+    DBI::dbDisconnect(con, shutdown = TRUE)
+
+} else {
 
 # create a DuckDB connection, either as a temporary in-memory database (default)
 con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
@@ -10,9 +25,10 @@ duckdb::duckdb_read_csv(con, name = name, files = files)
 df_name <- DBI::dbReadTable(con, paste(name))
 
 # assign the correct name to the new dataframe
-assign(paste(name), df_name, envir=.GlobalEnv)
+assign(paste(name), df_name, envir = .GlobalEnv)
 
 # close the connection
 DBI::dbDisconnect(con, shutdown = TRUE)
+    }
 
 }

@@ -10,7 +10,7 @@ duckdf_persist <- function(query = "") {
   from_df <- stringi::stri_extract_first_words(query_split[2], locale = NULL)
 
   # If the database exists, just execute the query
-  if (file.exists(paste(from_df)) == TRUE) {
+  if (file.exists(from_df) == TRUE) {
 
     # open db connection
     con <- DBI::dbConnect(duckdb::duckdb(), paste(from_df))

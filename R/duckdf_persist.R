@@ -1,4 +1,5 @@
-duckdf_persist <- function(query = "") {
+duckdf_persist <- function(query = "",
+                           db_name = NULL) {
 
   # Extract dataframe name using sting splits
   query_split <- stringi::stri_split_fixed(query, "FROM",
@@ -24,11 +25,16 @@ from_df_second <- stringi::stri_extract_first_words(query_split_second[2],
                                                     locale = NULL)
                   }
 
+# check for a user set db_name, otherwise use first dataframe name
+if (is.null(db_name)) {
+  db_name <- from_df
+}
+
   # If the database exists, just execute the query
-  if (file.exists(from_df) == TRUE) {
+  if (file.exists(db_name) == TRUE) {
 
     # open db connection
-    con <- DBI::dbConnect(duckdb::duckdb(), paste(from_df))
+    con <- DBI::dbConnect(duckdb::duckdb(), db_name)
 
     # execute required SQL query against the existing DuckDB table
     statement_result <- DBI::dbGetQuery(con, query)
@@ -43,7 +49,7 @@ from_df_second <- stringi::stri_extract_first_words(query_split_second[2],
   } else {
 
     # open db connection
-    con <- DBI::dbConnect(duckdb::duckdb(), paste(from_df))
+    con <- DBI::dbConnect(duckdb::duckdb(), db_name)
 
     # write a data.frame to the database
     DBI::dbWriteTable(con, paste(from_df), get(from_df))
@@ -51,8 +57,8 @@ from_df_second <- stringi::stri_extract_first_words(query_split_second[2],
     if (exists(from_df_second) == TRUE) {
       # register a second table in duckdb if a second table is required
       DBI::dbWriteTable(con, paste(from_df_second), get(from_df_second))
+      }
     }
-  }
 
     # execute required SQL query against the new DuckDB table
     statement_result <- DBI::dbGetQuery(con, query)

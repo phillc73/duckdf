@@ -21,7 +21,7 @@ query_split_second <- stringi::stri_split_fixed(query, "JOIN",
 
 query_split_second <- trimws(unlist(query_split_second))
 
-from_df_second <- stringi::stri_extract_first_words(query_split_second[2],
+from_df_second =  <- stringi::stri_extract_first_words(query_split_second[2],
                                                     locale = NULL)
                   }
 
@@ -54,7 +54,7 @@ if (is.null(db_name)) {
     # write a data.frame to the database
     DBI::dbWriteTable(con, paste(from_df), get(from_df))
 
-    if (exists(from_df_second) == TRUE) {
+    if (exists("from_df_second") == TRUE) {
       # register a second table in duckdb if a second table is required
       DBI::dbWriteTable(con, paste(from_df_second), get(from_df_second))
       }

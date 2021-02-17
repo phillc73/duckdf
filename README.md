@@ -51,13 +51,26 @@ duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
                 db_name = "mt_cars")
 ```
 
-It is also possible to use the main `duckdf()` function to write a database to disk
+The main `duckdf()` function can also be used to write a database to disk.
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
        persist = TRUE)
 ```
 It is not currently possible to define the database name using only `duckdf()`. The on-disk database defaults to the name of the first dataframe included in the query.
+
+If you've already created a DuckDB database, or received one from the flock, it is possible to return some brief information about each table it contains. Assuming the database on disk is named `mtcars`
+
+```r
+duckdb_gander("mtcars")
+```
+
+Assuming the database is in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are supported.
+
+```r
+duckdb_gander("mtcars", show_types = TRUE)
+```
+This returns a named list as well, but the table column types are now shown.
 
 This following function simply removes all traces of the `duckdb` called `mtcars` from the current working directory.
 

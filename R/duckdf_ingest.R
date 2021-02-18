@@ -31,7 +31,7 @@ df_name <- DBI::dbReadTable(con, paste(name))
         if (requireNamespace("fst", quietly = TRUE)) {
 
             # assign the correct name to the new tibble
-            assign(paste(name), tibble::as.tibble(df_name), envir = .GlobalEnv)
+            assign(paste(name), tibble::as_tibble(df_name), envir = .GlobalEnv)
             
 
          } else {

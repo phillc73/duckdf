@@ -89,6 +89,15 @@ The above will ingest the file called `filename.csv`, if found in the current wo
 
 If `persist = FALSE`, only a dataframe in the global environment is created, via a `duckdb` virtual table intermediate, and then `duckdf()` may be used to query it directly.
 
+It is also possible to define the returned object as either a `data.table` or `tibble`. The default returned object is a `data.frame`.
+
+```r
+duckdf_ingest(name = "descriptive_name", 
+              file = "filename.csv", 
+              persist = FALSE,
+              object_type = "data.table")
+```
+
 ## Benchmarks
 
 Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good.

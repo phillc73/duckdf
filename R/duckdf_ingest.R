@@ -28,7 +28,7 @@ df_name <- DBI::dbReadTable(con, paste(name))
     if (isTRUE(object_type == "tibble")) {
 
         # check if tibble package is installed
-        if (requireNamespace("fst", quietly = TRUE)) {
+        if (requireNamespace("tibble", quietly = TRUE)) {
 
             # assign the correct name to the new tibble
             assign(paste(name), tibble::as_tibble(df_name), envir = .GlobalEnv)

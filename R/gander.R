@@ -1,4 +1,4 @@
-duckdb_gander <- function(db_name,
+gander <- function(db_name,
                            show_types = FALSE) {
 
     if (file.exists(db_name) == FALSE) {

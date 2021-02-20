@@ -3,7 +3,7 @@ duckdf <- function(query = "",
 
 if (persist == TRUE) {
 
-    duckdf_persist(query)
+    duckdf::persist(query)
 
 } else {
 

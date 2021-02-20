@@ -1,4 +1,4 @@
-duckdf_ingest <- function(name,
+ingest <- function(name,
                           file,
                           persist = TRUE,
                           object_type = "data.frame") {

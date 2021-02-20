@@ -40,14 +40,14 @@ In reality, this function is just a simple wrapper around a collection of `DBI` 
 Joins of up to two dataframes are supported. See the `nycflights13` benchmark example below for such an SQL query.
 
 ```r
-duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
+duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
-The above is obviously the same SQL statement, however by using `duckdf_persist()` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the dataframe name.
+The above is obviously the same SQL statement, however by using `duckdf::persist()` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the dataframe name.
 
 However, it is also possible to define a specific on-disk database name.
 
 ```r
-duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
                 db_name = "mt_cars")
 ```
 
@@ -62,37 +62,37 @@ It is not currently possible to define the database name using only `duckdf()`. 
 If you've already created a DuckDB database, or received one from the flock, it is possible to return some brief information about each table it contains. Assuming the database on disk is named `mtcars`
 
 ```r
-duckdb_gander("mtcars")
+duckdf::gander("mtcars")
 ```
 
 Assuming the database is in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are supported.
 
 ```r
-duckdb_gander("mtcars", show_types = TRUE)
+duckdf::gander("mtcars", show_types = TRUE)
 ```
 This returns a named list as well, but the table column types are now shown.
 
 This following function simply removes all traces of the `duckdb` called `mtcars` from the current working directory.
 
 ```r
-duckdf_cleanup("mtcars")
+duckdf::cleanup("mtcars")
 ```
 
-This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf_ingest()`
+This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf::ingest()`
 
 ```r
-duckdf_ingest(name = "descriptive_name", 
+duckdf::ingest(name = "descriptive_name", 
               file = "filename.csv", 
               persist = TRUE)
 ```
-The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database named, `descriptive_name`, and save it to disk. The single table in the database will also be called `descriptive_name`. This data can then be queried with `duckdf_persist()`. 
+The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database named, `descriptive_name`, and save it to disk. The single table in the database will also be called `descriptive_name`. This data can then be queried with `duckdf::persist()`. 
 
 If `persist = FALSE`, only a dataframe in the global environment is created, via a `duckdb` virtual table intermediate, and then `duckdf()` may be used to query it directly.
 
 It is also possible to define the returned object as either a `data.table` or `tibble`. The default returned object is a `data.frame`.
 
 ```r
-duckdf_ingest(name = "descriptive_name", 
+duckdf::ingest(name = "descriptive_name", 
               file = "filename.csv", 
               persist = FALSE,
               object_type = "data.table")
@@ -156,7 +156,7 @@ duck_bench <- microbenchmark(times=500,
                              tidyquery =  {query("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
                              # duckdf library
                              duckdf = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
-                             duckdf_persist = {duckdf_persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
+                             duckdf_persist = {duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
                              # data.table library
                              data_table = {mtcars_data_table[disp >= 200, c("mpg", "cyl"),]},
                              # dplyr library

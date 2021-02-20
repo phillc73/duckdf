@@ -1,4 +1,4 @@
-duckdf_cleanup <- function(query = "") {
+cleanup <- function(query = "") {
 
   # check if the files exist and if they do, remove them
   if (file.exists(query))

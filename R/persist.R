@@ -1,4 +1,4 @@
-duckdf_persist <- function(query = "",
+persist <- function(query = "",
                            db_name = NULL) {
 
   # Extract dataframe name using sting splits

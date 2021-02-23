@@ -1,9 +1,11 @@
 duckdf <- function(query = "",
-                   persist = FALSE) {
+                   persist = FALSE,
+                   db_name = NULL) {
 
 if (persist == TRUE) {
 
-    duckdf::persist(query)
+    duckdf::persist(query,
+                    db_name)
 
 } else {
 

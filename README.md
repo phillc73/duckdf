@@ -40,24 +40,24 @@ In reality, this function is just a simple wrapper around a collection of `DBI` 
 Joins of up to two dataframes are supported. See the `nycflights13` benchmark example below for such an SQL query.
 
 ```r
-duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
+duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+      persist = TRUE)
 ```
-The above is obviously the same SQL statement, however by using `duckdf::persist()` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the dataframe name.
+The above is obviously the same SQL statement, however by using `perist = TRUE` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the first named dataframe. 
 
-However, it is also possible to define a specific on-disk database name.
+The function `duckdf::perist()` may also be used directly.
 
 ```r
-duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
-                db_name = "mt_cars")
+duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
 
-The main `duckdf()` function can also be used to write a database to disk.
+It is also possible to define a specific on-disk database name, different from the dataframe name used in the query. 
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
-       persist = TRUE)
+      persist = TRUE,
+      db_name = "mt_cars")
 ```
-It is not currently possible to define the database name using only `duckdf()`. The on-disk database defaults to the name of the first dataframe included in the query.
 
 If you've already created a DuckDB database, or received one from the flock, it is possible to return some brief information about each table it contains. Assuming the database on disk is named `mtcars`
 

@@ -43,9 +43,9 @@ Joins of up to two dataframes are supported. See the `nycflights13` benchmark ex
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
       persist = TRUE)
 ```
-The above is obviously the same SQL statement, however by using `perist = TRUE` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the first named dataframe. 
+The above is obviously the same SQL statement, however by using `persist = TRUE` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the first named dataframe. 
 
-The function `duckdf::perist()` may also be used directly.
+The function `duckdf::persist()` may also be used directly.
 
 ```r
 duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")

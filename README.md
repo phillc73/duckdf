@@ -3,7 +3,7 @@
 
 This is a convenience package for everyone who has a deep and abiding love affair with SQL (and ducks).
 
-Instead of using other incredibly popular and useful packages like [data.table](https://rdatatable.gitlab.io/data.table/) or [dplyr](https://dplyr.tidyverse.org/), one could use `duckdf` instead to slice and dice dataframes with SQL. Precedence exists in the [sqldf](https://github.com/ggrothendieck/sqldf) package, but this one is better because it quacks (although is not nearly as comprehensive, well planned or tested).
+Instead of using other incredibly popular and useful packages like [data.table](https://rdatatable.gitlab.io/data.table/) or [dplyr](https://dplyr.tidyverse.org/), one could use `duckdf` instead to slice and dice dataframes with SQL. Precedence exists in the [sqldf](https://github.com/ggrothendieck/sqldf) package, but this one is better because it quacks.
 
 It's also meant to be a bit of fun.
 
@@ -37,7 +37,35 @@ This registers the well known `mtcars` dataset as a virtual table in the `duckdb
 
 In reality, this function is just a simple wrapper around a collection of `DBI` functions, such as `dbConnect()`, `dbGetQuery()`, `dbDisconnect()` and the `duckdb` function `duckdb_register`.
 
-Joins of up to two dataframes are supported. See the `nycflights13` benchmark example below for such an SQL query.
+If you want to fly as fast as possible, the same query may be executed, but with the dataframe specifically named:
+
+```r
+duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
+      df_name = "mtcars")
+ ```
+Defining a specific dataframe name in this way is slightly faster than allowing `duckdf()` to figure it out by making a decision based on the query string alone. As `duckdf()` uses string processing to decide the dataframe name to use when one is not defined, it is probably also more robust to do define one, although perhaps not as convenient.
+
+Multiple dataframes may be named, to support joins:
+
+```r
+  duckdf(
+"SELECT origin, dest,
+    COUNT(flight) AS num_flts,
+    round(SUM(seats)) AS num_seats,
+    round(AVG(arr_delay)) AS avg_delay
+  FROM flights f LEFT OUTER JOIN planes p
+    ON f.tailnum = p.tailnum
+  WHERE distance BETWEEN 200 AND 300
+    AND air_time IS NOT NULL
+  GROUP BY origin, dest
+  HAVING COUNT(flight) > 3000
+  ORDER BY num_seats DESC, avg_delay ASC
+  LIMIT 2;",
+  df_name = c("flights", "planes")
+        )
+```
+
+Joins of up to only two dataframes are supported where no specific dataframes are defined. See the `nycflights13` benchmark example below for such an SQL query.
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
@@ -65,7 +93,7 @@ If you've already created a DuckDB database, or received one from the flock, it 
 duckdf::gander("mtcars")
 ```
 
-Assuming the database is in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are supported.
+IF the database is found in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are currently supported.
 
 ```r
 duckdf::gander("mtcars", show_types = TRUE)
@@ -78,14 +106,14 @@ This following function simply removes all traces of the `duckdb` called `mtcars
 duckdf::cleanup("mtcars")
 ```
 
-This package now also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf::ingest()`
+This package also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf::ingest()`
 
 ```r
 duckdf::ingest(name = "descriptive_name", 
               file = "filename.csv", 
               persist = TRUE)
 ```
-The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database named, `descriptive_name`, and save it to disk. The single table in the database will also be called `descriptive_name`. This data can then be queried with `duckdf::persist()`. 
+The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database named, `descriptive_name`, and save it to disk. The single table in the database will also be called `descriptive_name`. This data can then be queried with `duckdf(query, persist = TRUE)` or `duckdf_persist()`. 
 
 If `persist = FALSE`, only a dataframe in the global environment is created, via a `duckdb` virtual table intermediate, and then `duckdf()` may be used to query it directly.
 
@@ -156,7 +184,13 @@ duck_bench <- microbenchmark(times=500,
                              tidyquery =  {query("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
                              # duckdf library
                              duckdf = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
-                             duckdf_persist = {duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
+                             duckdf_df_name = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
+                                              df_name = "mtcars")},
+                             duckdf_persist = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
+                                              persist = TRUE)},
+                             duckdf_persist_named = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
+                                                    persist = TRUE, 
+                                                    db_name = "mt_cars")},
                              # data.table library
                              data_table = {mtcars_data_table[disp >= 200, c("mpg", "cyl"),]},
                              # dplyr library
@@ -188,56 +222,74 @@ library(nycflights13)
 
 vs_tidyquery <- microbenchmark(times = 500,
 
-                                          tidyquery = {
-                                            tidyquery::query(
-                                          "SELECT origin, dest,
-                                              COUNT(flight) AS num_flts,
-                                              round(SUM(seats)) AS num_seats,
-                                              round(AVG(arr_delay)) AS avg_delay
-                                            FROM flights f LEFT OUTER JOIN planes p
-                                              ON f.tailnum = p.tailnum
-                                            WHERE distance BETWEEN 200 AND 300
-                                              AND air_time IS NOT NULL
-                                            GROUP BY origin, dest
-                                            HAVING num_flts > 3000
-                                            ORDER BY num_seats DESC, avg_delay ASC
-                                            LIMIT 2;"
-                                                            )
-                                                      },
+                              tidyquery = {
+                                tidyquery::query(
+                              "SELECT origin, dest,
+                                  COUNT(flight) AS num_flts,
+                                  round(SUM(seats)) AS num_seats,
+                                  round(AVG(arr_delay)) AS avg_delay
+                                FROM flights f LEFT OUTER JOIN planes p
+                                  ON f.tailnum = p.tailnum
+                                WHERE distance BETWEEN 200 AND 300
+                                  AND air_time IS NOT NULL
+                                GROUP BY origin, dest
+                                HAVING num_flts > 3000
+                                ORDER BY num_seats DESC, avg_delay ASC
+                                LIMIT 2;"
+                                                )
+                                          },
 
-                                          duckdf = {
-                                            duckdf(
-                                          "SELECT origin, dest,
-                                              COUNT(flight) AS num_flts,
-                                              round(SUM(seats)) AS num_seats,
-                                              round(AVG(arr_delay)) AS avg_delay
-                                            FROM flights f LEFT OUTER JOIN planes p
-                                              ON f.tailnum = p.tailnum
-                                            WHERE distance BETWEEN 200 AND 300
-                                              AND air_time IS NOT NULL
-                                            GROUP BY origin, dest
-                                            HAVING COUNT(flight) > 3000
-                                            ORDER BY num_seats DESC, avg_delay ASC
-                                            LIMIT 2;"
-                                                  )
-                                                    },
+                              duckdf = {
+                                duckdf(
+                              "SELECT origin, dest,
+                                  COUNT(flight) AS num_flts,
+                                  round(SUM(seats)) AS num_seats,
+                                  round(AVG(arr_delay)) AS avg_delay
+                                FROM flights f LEFT OUTER JOIN planes p
+                                  ON f.tailnum = p.tailnum
+                                WHERE distance BETWEEN 200 AND 300
+                                  AND air_time IS NOT NULL
+                                GROUP BY origin, dest
+                                HAVING COUNT(flight) > 3000
+                                ORDER BY num_seats DESC, avg_delay ASC
+                                LIMIT 2;"
+                                      )
+                                        },
 
-                                          dplyr = {
-                                            flights %>%
-                                              left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
-                                              rename(f.year = "year.f", p.year = "year.p") %>%
-                                              filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
-                                              group_by(origin, dest) %>%
-                                              filter(sum(!is.na(flight)) > 3000) %>%
-                                              summarise(num_flts = sum(!is.na(flight)), 
-                                                        num_seats = round(sum(seats, na.rm = TRUE)), 
-                                                        avg_delay = round(mean(arr_delay, 
-                                                        na.rm = TRUE))) %>%
-                                              ungroup() %>%
-                                              arrange(dplyr::desc(num_seats), avg_delay) %>%
-                                              head(2)
-                                                  }
-                                )
+                               duckdf_named = {
+                                duckdf(
+                              "SELECT origin, dest,
+                                  COUNT(flight) AS num_flts,
+                                  round(SUM(seats)) AS num_seats,
+                                  round(AVG(arr_delay)) AS avg_delay
+                                FROM flights f LEFT OUTER JOIN planes p
+                                  ON f.tailnum = p.tailnum
+                                WHERE distance BETWEEN 200 AND 300
+                                  AND air_time IS NOT NULL
+                                GROUP BY origin, dest
+                                HAVING COUNT(flight) > 3000
+                                ORDER BY num_seats DESC, avg_delay ASC
+                                LIMIT 2;",
+                                df_name = c("flights", "planes")
+                                      )
+                                        },
+
+                              dplyr = {
+                                flights %>%
+                                  left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
+                                  rename(f.year = "year.f", p.year = "year.p") %>%
+                                  filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
+                                  group_by(origin, dest) %>%
+                                  filter(sum(!is.na(flight)) > 3000) %>%
+                                  summarise(num_flts = sum(!is.na(flight)), 
+                                            num_seats = round(sum(seats, na.rm = TRUE)), 
+                                            avg_delay = round(mean(arr_delay, 
+                                            na.rm = TRUE))) %>%
+                                  ungroup() %>%
+                                  arrange(dplyr::desc(num_seats), avg_delay) %>%
+                                  head(2)
+                                      }
+                    )
 
 autoplot(vs_tidyquery)
 ```

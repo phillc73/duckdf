@@ -1,7 +1,9 @@
 duckdf <- function(query = "",
                    persist = FALSE,
+                   df_name = NULL,
                    db_name = NULL) {
 
+# If they want a DuckDB on disk.....
 if (persist == TRUE) {
 
     duckdf::persist(query,
@@ -12,7 +14,19 @@ if (persist == TRUE) {
 # create a DuckDB connection, either as a temporary in-memory database (default)
 con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 
-# Extract dataframe name using sting splits
+# if there's a named dataframe (or multiple), do this
+if (!is.null(df_name)) {
+
+duckdb_reg <- function(x) {  
+
+  duckdb::duckdb_register(con, paste(x), get(x))}
+  
+  sapply(df_name, duckdb_reg)
+
+} else {
+
+# if there isn't a named dataframe, string queries
+# Extract dataframe name using string splits
 query_split <- stringi::stri_split_fixed(query, "FROM",
                                          omit_empty = TRUE,
                                          opts_fixed = stringi::stri_opts_fixed(case_insensitive = TRUE))
@@ -42,7 +56,8 @@ from_df_second <- stringi::stri_extract_first_words(query_split_second[2],
 # register a dataframe view in duckdb
 duckdb::duckdb_register(con, paste(from_df_second), get(from_df_second))
 
-}
+            }
+        }
 
 # execute required SQL query against the new DuckDB table
 statement_result <- DBI::dbGetQuery(con, query)
@@ -52,7 +67,7 @@ DBI::dbDisconnect(con, shutdown = TRUE)
 
 # return results
 return(statement_result)
-    }
 
+    }
 }
 

@@ -1,7 +1,16 @@
 ingest <- function(name,
-                          file,
-                          persist = TRUE,
-                          object_type = "data.frame") {
+                  files,
+                  persist = TRUE,
+                  object_type = "data.frame",
+                  header = TRUE,
+                  na.strings = "",
+                  nrow.check = 500,
+                  delim = ",",
+                  quote = "\"",
+                  col.names = NULL,
+                  lower.case.names = FALSE,
+                  sep = delim,
+                  transaction = TRUE) {
 
 if (persist == TRUE) {
 
@@ -9,7 +18,18 @@ if (persist == TRUE) {
     con <- DBI::dbConnect(duckdb::duckdb(), paste(name))
 
     # read in the csv to a duckdb table
-    duckdb::duckdb_read_csv(con, name = name, files = file)
+    duckdb::duckdb_read_csv(con,
+                            name = name, 
+                            files = files, 
+                            header = header,
+                            na.strings = na.strings,
+                            nrow.check = nrow.check,
+                            delim = delim,
+                            quote = quote,
+                            col.names = col.names,
+                            lower.case.names = lower.case.names,
+                            sep = sep,
+                            transaction = transaction)
 
     # close the connection
     DBI::dbDisconnect(con, shutdown = TRUE)
@@ -20,7 +40,19 @@ if (persist == TRUE) {
 con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:", read_only = FALSE)
 
 # read in the csv to a duckdb table
-duckdb::duckdb_read_csv(con, name = name, files = file)
+duckdb::duckdb_read_csv(con, 
+                        name = name, 
+                        files = files, 
+                        header = header,
+                        na.strings = na.strings,
+                        nrow.check = nrow.check,
+                        delim = delim,
+                        quote = quote,
+                        col.names = col.names,
+                        lower.case.names = lower.case.names,
+                        sep = sep,
+                        transaction = transaction
+                        )
 
 # read the data back to a dataframe
 df_name <- DBI::dbReadTable(con, paste(name))

@@ -93,7 +93,7 @@ If you've already created a DuckDB database, or received one from the flock, it 
 duckdf::gander("mtcars")
 ```
 
-IF the database is found in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are currently supported.
+If the database is found in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are currently supported.
 
 ```r
 duckdf::gander("mtcars", show_types = TRUE)

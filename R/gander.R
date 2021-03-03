@@ -1,3 +1,36 @@
+#' Gander at duckdbs
+#'
+#' \code{gander} returns some brief information about an on-disk duckdb database
+#'
+#' @param db_name String. The specific name of the duckdb database to have a
+#'   gander at. Default is empty. Required.
+#' 
+#'  @param show_types Boolean. Show table column types in returned list. 
+#'   Default FALSE
+#' 
+#' @return If the database is found in the current working directory, this
+#'  function returns a list of the first five rows from each table. Each
+#'  list item name corresponds with the database table name.
+#'
+#' @section Note on \code{gander}: Currently only databases with up to a maximum
+#'  of two tables are supported.
+#'
+#' @examples
+#' \dontrun{
+#' 
+#' # Query the mtcars dataframe and write the whole table to an on-disk duckdb
+#' duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+#'        persist = TRUE)
+#' 
+#' # Gander at the tables in the on-disk duckdbdatabase for mtcars, 
+#' # showing column types
+#' duckdf::gander("mtcars", show_types = TRUE)
+#' 
+#'  }
+#'
+#' @export 
+#' 
+
 gander <- function(db_name,
                            show_types = FALSE) {
 

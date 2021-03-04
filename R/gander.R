@@ -5,7 +5,7 @@
 #' @param db_name String. The specific name of the duckdb database to have a
 #'   gander at. Default is empty. Required.
 #' 
-#'  @param show_types Boolean. Show table column types in returned list. 
+#' @param show_types Boolean. Show table column types in returned list. 
 #'   Default FALSE
 #' 
 #' @return If the database is found in the current working directory, this

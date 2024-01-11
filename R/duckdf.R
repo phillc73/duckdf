@@ -23,14 +23,14 @@ duckdf <- function(query = "",
           expr = {  is(eval.parent(parse(text=x)), "data.frame")  },
           error = function(e){  F  } )
         }
-      df_name= query_dfs[ sapply(query_dfs,if_df_exists) ]
+      if(length(query_dfs)>0) df_name= query_dfs[ sapply(query_dfs,if_df_exists) ]
     }
       
       duckdb_reg <- function(x) {  
         
         duckdb::duckdb_register(con, paste(x), get(x))}
       
-      sapply(df_name, duckdb_reg)
+      if (!is.null(df_name)) sapply(df_name, duckdb_reg)
       
     
     

@@ -1,6 +1,6 @@
 Package: duckdf
 Type: Package
-Title: SQL for Dataframes, But With Ducks
+Title: SQL for Dataframes, but with Ducks
 Version: 0.2.0
 Authors@R: person("Phill", "Clarke", email = "phill@fastmail.com",
     role = c("aut", "cre"))

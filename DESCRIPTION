@@ -1,20 +1,32 @@
 Package: duckdf
 Type: Package
 Title: SQL for Dataframes, But With Ducks
-Version: 0.1.2
-Date: 2021-02-16
-Author: Phill Clarke
-Maintainer: Phill Clarke <phill@fastmail.com>
-Description: Like SQL? Like dataframes? Like ducks? Then duckdf is for you.
-Depends:
-    duckdb (>= 0.2.4),
-    R (>= 3.6.0)
-License: GPL-3 | file LICENSE
+Version: 0.2.0
+Authors@R: person("Phill", "Clarke", email = "phill@fastmail.com",
+    role = c("aut", "cre"))
+Description: Like SQL? Like dataframes? Like ducks? Then duckdf is for
+    you. Run SQL queries against R dataframes on an in-memory DuckDB
+    connection: zero-copy view registration, no tidyverse dependencies.
+License: AGPL-3 | file LICENSE
 Encoding: UTF-8
-LazyData: true
-URL: https://github.com/phillc73/duckdf
-BugReports: http://www.github.com/phillc73/duckdf/issues
+Depends:
+    R (>= 4.2.0)
 Imports:
-    DBI (>= 1.1.1),
-    stringi (>= 1.4.6)
-RoxygenNote: 7.0.2
+    DBI (>= 1.1.3),
+    checkmate,
+    duckdb (>= 1.5.6)
+Suggests:
+    bench,
+    data.table,
+    dbplyr,
+    dplyr,
+    duckplyr,
+    knitr,
+    rmarkdown,
+    sqldf,
+    testthat (>= 3.0.0),
+    tibble
+URL: https://github.com/phillc73/duckdf
+BugReports: https://github.com/phillc73/duckdf/issues
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.1.1

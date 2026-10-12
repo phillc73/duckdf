@@ -1,4 +1,6 @@
-*.Rproj
+# build and check artifacts
+*.tar.gz
+*.Rcheck/
 .Rproj.user
 .Rhistory
-.idea
+.RData

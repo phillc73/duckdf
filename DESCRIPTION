@@ -26,7 +26,8 @@ Suggests:
     rmarkdown,
     sqldf,
     testthat (>= 3.0.0),
-    tibble
+    tibble,
+    withr
 URL: https://github.com/phillc73/duckdf
 BugReports: https://github.com/phillc73/duckdf/issues
 Config/testthat/edition: 3

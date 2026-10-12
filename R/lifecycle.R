@@ -45,7 +45,7 @@ duckdf_shutdown <- function(e = .duckdf) {
 }
 
 # Rule 8: a name already visible as a view is a collision error, not a
-# silent overwrite (0.1.2 behaviour)
+# silent overwrite (0.1.2 behavior)
 duckdf_register_view <- function(con, name, df) {
   views <- DBI::dbGetQuery(con,
     "SELECT view_name FROM duckdb_views() WHERE NOT internal")

@@ -61,7 +61,7 @@ arm_registry <- function(data) {
   arms <- list()
 
   arms$duckdf <- list(
-    label = "duckdf 0.2.0",
+    label = "duckdf 0.2.1",
     available = requireNamespace("duckdb", quietly = TRUE),
     reset = function() cleanup("bench_unused"),
     warm = function() {

@@ -179,7 +179,7 @@ The full harness lives in `bench/run_benchmarks.R` (seven arms, four fixed tasks
 
 | arm | simple SELECT | filter + aggregate, 1M rows | join, 1M rows | window, 1M rows |
 |---|---|---|---|---|
-| duckdf 0.2.0 | 5.3 | 93 | 131 | 65 |
+| duckdf 0.2.1 | 5.3 | 93 | 131 | 65 |
 | raw duckdb-r (DBI) | 2.9 | 95 | 156 | 62 |
 | sqldf (SQLite) | 30 | 802 | 1190 | 799 |
 | data.table | 0.8 | 31 | 80 | 20 |
@@ -191,7 +191,7 @@ Speed is only half the story. The same harness records allocations per query - w
 
 | arm | simple SELECT | filter + aggregate, 1M rows | join, 1M rows | window, 1M rows |
 |---|---|---|---|---|
-| duckdf 0.2.0 | 1.8 KB | 1.8 KB | 1.8 KB | 2.3 MB |
+| duckdf 0.2.1 | 1.8 KB | 1.8 KB | 1.8 KB | 2.3 MB |
 | raw duckdb-r (DBI) | 936 B | 936 B | 936 B | 2.3 MB |
 | sqldf (SQLite) | 18.7 KB | 14.9 KB | 24.8 KB | 3.9 MB |
 | data.table | 49.1 KB | 27.8 MB | 65 MB | 15.9 MB |

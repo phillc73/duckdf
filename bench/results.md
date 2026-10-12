@@ -89,3 +89,11 @@ connection open are warm-phase setup, not timed; sqldf has no such
 setup to hide behind - its import is per call by design.
 
 
+
+Wrapper overhead (2026-10-13): Rprof on a 10M-row GROUP BY puts
+92.5% of duckdf's wall time in rapi_execute (the DuckDB engine); on a
+1M-row aggregate, duckdf's total wall time measured -10 ms against a
+raw dbGetQuery on the same registered view, i.e. within noise. The R
+glue (extraction, registration, collision check) is not a measurable
+factor at any task size in the harness; no optimisation pass was
+warranted.

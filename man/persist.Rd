@@ -31,7 +31,8 @@ the database; those names are the extraction candidate scope.}
 
 \item{df_name}{Character vector of variable names in the calling
 scope to write as tables - registered verbatim, the extractor is
-not invoked.}
+not invoked, so multi-statement queries and DDL also pass
+through here.}
 
 \item{params}{Parameter list forwarded to \code{DBI::dbGetQuery()}
 untouched.}

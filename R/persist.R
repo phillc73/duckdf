@@ -55,7 +55,8 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
 #'   the database; those names are the extraction candidate scope.
 #' @param df_name Character vector of variable names in the calling
 #'   scope to write as tables - registered verbatim, the extractor is
-#'   not invoked.
+#'   not invoked, so multi-statement queries and DDL also pass
+#'   through here.
 #' @param params Parameter list forwarded to \code{DBI::dbGetQuery()}
 #'   untouched.
 #' @param as.data.table Logical. Return a data.table instead of a plain

@@ -22,7 +22,12 @@ queries are rejected). Required.}
 on-disk database (see that function).}
 
 \item{df_name}{Character vector of variable names holding
-dataframes - registered verbatim, the extractor is not invoked.}
+dataframes - registered verbatim, the extractor is not invoked.
+This is also the escape hatch: multi-statement queries and DDL
+(CREATE TABLE ...) pass through raw. A table created this way
+stays on the shared connection, is not listed by
+\code{duckdf_views()} (registered views only) and is cleared
+only by \code{cleanup()}.}
 
 \item{df}{Named list of dataframes - registered under their list
 names; those names are the extraction candidate scope. Preferred
@@ -31,7 +36,9 @@ form inside functions: no caller-frame dependency.}
 \item{params}{Parameter list forwarded to \code{DBI::dbGetQuery()}
 untouched; use DuckDB \code{?}/\code{$1} placeholders in the query.}
 
-\item{db_name}{String. On-disk database name for the persist path.}
+\item{db_name}{String. On-disk database name for the persist path.
+The extractor is not invoked when df_name is given, so
+multi-statement queries and DDL also pass through here.}
 
 \item{as.data.table}{Logical. Return a data.table instead of a plain
 data.frame.}

@@ -1,4 +1,4 @@
-🦆 Ducks all the way down
+Ducks all the way down
 =======
 
 This is a convenience package for everyone who has a deep and abiding love affair with SQL (and ducks).
@@ -7,16 +7,27 @@ Instead of using other incredibly popular and useful packages like [data.table](
 
 It's also meant to be a bit of fun.
 
+## A note on ducks, and the tidyverse
+
+`duckdf` has zero tidyverse dependencies. Not one. This is a specific, deliberate design choice, made playfully and with real affection for the tidyverse packages themselves, which are excellent at what they do. The frame is simple: some of us want SQL strings, an R dataframe in, an R dataframe out, and a dependency tree a duck could waddle across without getting tired. If your dependency tree has more branches than a wetland, that is fine, that is even good, but it is not this package. Because that's better for ducks.
+
+The benchmark arms (dplyr, dbplyr, duckplyr) appear in `Suggests` only, so the comparisons below can be reproduced. They are never loaded by `duckdf` itself.
+
+## Lineage
+
+The idea is old: `sqldf` has been letting R users write SQL against dataframes since 2007, by copying everything into SQLite on every query. The original `duckdf` (v0.1.2, March 2021) took that idea and pointed it at DuckDB, registering dataframes as zero-copy views instead of copying them. It was fast, it quacked, and then life happened and it sat dormant while DuckDB grew enormously.
+
+0.2.0 is the resurrection: the same five functions (`duckdf`, `gander`, `ingest`, `persist`, `cleanup`) plus a new sixth (`duckdf_views`), rebuilt for duckdb-r 1.5.6 and later. Table names now come from DuckDB's own parse tree rather than string splitting on the word FROM, which means subqueries, joins, CTEs and quoted identifiers all just work. There is a lot of new stuff in 0.1.2's old `duckdf` that has been superseded, which the triage of the old issues records, but the quack remains.
+
 ## Quick Start
 
-To install this package, first install [duckdb](https://duckdb.org/):
+R 4.2.0 or later, and [duckdb](https://duckdb.org/) 1.5.6 or later (the package pins `duckdb (>= 1.5.6)`):
 
 ```r
 install.packages("duckdb")
 ```
-This package has been tested against the 0.2.4 version of `duckdb`
 
-Then install `duckdf` with the `remotes` package.
+Then install `duckdf` with the `remotes` package:
 
 ```r
 # install.packages("remotes")
@@ -27,273 +38,164 @@ library("duckdf")
 
 ## Usage
 
-If you want to write "normal" SQL SELECT statements in an R function, against an existing dataframe:
+Write "normal" SQL SELECT statements against existing dataframes:
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
 ```
 
-This registers the well known `mtcars` dataset as a virtual table in the `duckdb` database, then selects just the columns `mpg` and `cyl`, where the `disp` column is greater than 200.
+This registers the well known `mtcars` dataset as a virtual table on the shared in-memory DuckDB connection, runs the query, unregisters the view and hands you a plain `data.frame`. The connection stays open between calls, so warm queries skip the setup. In reality this function is just a wrapper around a collection of `DBI` functions such as `dbGetQuery()` and the duckdb function `duckdb_register()`, but you do not have to manage any of them.
 
-In reality, this function is just a simple wrapper around a collection of `DBI` functions, such as `dbConnect()`, `dbGetQuery()`, `dbDisconnect()` and the `duckdb` function `duckdb_register`.
-
-If you want to fly as fast as possible, the same query may be executed, but with the dataframe specifically named:
+Table names in the query are found via DuckDB's own parse tree, filtered to dataframes visible in the calling scope. Anything DuckDB can read natively (CSV, Parquet, globs) passes straight through with no registration:
 
 ```r
-duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
-      df_name = "mtcars")
- ```
-Defining a specific dataframe name in this way is slightly faster than allowing `duckdf()` to figure it out by making a decision based on the query string alone. As `duckdf()` uses string processing to decide the dataframe name to use when one is not defined, it is probably also more robust to do define one, although perhaps not as convenient.
+# Read a csv without registering anything - DuckDB reads it natively
+duckdf("SELECT * FROM read_csv_auto('myfile.csv')")
+```
+
+If you want to fly as fast as possible, name the dataframes explicitly:
+
+```r
+duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+       df_name = "mtcars")
+```
+
+`df_name` skips the extraction entirely and registers verbatim. Because of that it is also the escape hatch: multi-statement queries and DDL (`CREATE TABLE ...`) work here and nowhere else. Two caveats worth knowing: a table created this way stays on the shared connection, invisible to `duckdf_views()` (which lists registered views only), and only `cleanup()` clears it. Useful for a deliberate `CREATE OR REPLACE TABLE ... AS SELECT`, just tidy up afterwards.
+
+Inside functions, or anywhere the caller's scope is not where your dataframes live, pass them as a named list - those names become the extraction scope, so nothing outside the list is registered:
+
+```r
+cyl_query <- function(x) {
+  duckdf("SELECT mpg FROM mtcars WHERE cyl = $1",
+         df = list(mtcars = mtcars),
+         params = list(x))
+}
+```
+
+`params` is forwarded untouched to `DBI::dbGetQuery()`, which is the SQL-injection-safe path; use DuckDB's `?` or `$1` placeholders in the query.
 
 Multiple dataframes may be named, to support joins:
 
 ```r
-  duckdf(
-"SELECT origin, dest,
-    COUNT(flight) AS num_flts,
-    round(SUM(seats)) AS num_seats,
-    round(AVG(arr_delay)) AS avg_delay
-  FROM flights f LEFT OUTER JOIN planes p
-    ON f.tailnum = p.tailnum
-  WHERE distance BETWEEN 200 AND 300
-    AND air_time IS NOT NULL
-  GROUP BY origin, dest
-  HAVING COUNT(flight) > 3000
-  ORDER BY num_seats DESC, avg_delay ASC
-  LIMIT 2;",
-  df_name = c("flights", "planes")
-        )
+duckdf(
+  "SELECT origin, dest,
+     COUNT(flight) AS num_flts,
+     round(SUM(seats)) AS num_seats,
+     round(AVG(arr_delay)) AS avg_delay
+   FROM flights f LEFT OUTER JOIN planes p
+     ON f.tailnum = p.tailnum
+   WHERE distance BETWEEN 200 AND 300
+     AND air_time IS NOT NULL
+   GROUP BY origin, dest
+   HAVING COUNT(flight) > 3000
+   ORDER BY num_seats DESC, avg_delay ASC
+   LIMIT 2",
+  df = list(flights = flights, planes = planes))
 ```
 
-Joins of up to only two dataframes are supported where no specific dataframes are defined. See the `nycflights13` benchmark example below for such an SQL query.
+(Unlike 0.1.2 there is no two-table cap; name two, name twenty, they are all zero-copy views.)
+
+Want a `data.table` back? One argument:
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
-      persist = TRUE)
-```
-The above is obviously the same SQL statement, however by using `persist = TRUE` an on-disk `duckdb` database is created in the current working directory. The name of the database will be the same as the first named dataframe. 
-
-The function `duckdf::persist()` may also be used directly.
-
-```r
-duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")
+       as.data.table = TRUE)
 ```
 
-It is also possible to define a specific on-disk database name, different from the dataframe name used in the query. 
+`data.table` stays in `Suggests`; if it is not installed the error tells you how to fix that rather than guessing.
+
+### persist
 
 ```r
 duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
-      persist = TRUE,
-      db_name = "mt_cars")
+       persist = TRUE)
 ```
 
-If you've already created a DuckDB database, or received one from the flock, it is possible to return some brief information about each table it contains. Assuming the database on disk is named `mtcars`
+Same SQL, but an on-disk DuckDB database is created in the current working directory, the queried dataframes are written into it as real tables, and the query runs against the file. The database's name defaults to the first table in the query; give it a different one with `db_name`. The function `duckdf::persist()` does the same directly:
+
+```r
+duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
+                db_name = "mt_cars")
+```
+
+If a database with that name already exists, the query simply runs against what is on disk - and passing `df`/`df_name` at the same time is an error naming the database, so your data source cannot silently switch underneath you. All tables are written before any query executes, and the connection is closed on every exit path, success or failure.
+
+### gander
+
+If you've already created a DuckDB database, or received one from the flock:
 
 ```r
 duckdf::gander("mtcars")
-```
-
-If the database is found in the current working directory, this returns a list of the first five rows from each table. Each list item name corresponds with the database table name. Databases with up to two tables are currently supported.
-
-```r
 duckdf::gander("mtcars", show_types = TRUE)
 ```
-This returns a named list as well, but the table column types are now shown.
 
-This following function simply removes all traces of the `duckdb` called `mtcars` from the current working directory.
+Returns a named list holding the first five rows of every table in the database; `show_types = TRUE` adds the column types. Any number of tables (0.1.2 capped at two, arbitrarily; that cap has flown away). A missing database is an error naming the path checked, not a message string pretending to be a result.
+
+### ingest
+
+In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf::ingest()`:
+
+```r
+# CSV in, on-disk duckdb out
+duckdf::ingest(name = "descriptive_name",
+               files = "filename.csv")
+
+# CSV in, data.table out, returned for capture
+mtcars2 <- duckdf::ingest(name = "mtcars2",
+                          files = "filename.csv",
+                          persist = FALSE,
+                          object_type = "data.table")
+```
+
+`ingest` passes every `duckdb_read_csv` option through unchanged (`header`, `na.strings`, `nrow.check`, `delim`, `quote`, `col.names`, `lower.case.names`, `sep`, `transaction`). With `persist = FALSE` it returns the data as `object_type` (`data.frame` by default, `data.table` or `tibble` also welcome) and assigns nothing anywhere - callers capture the return value. Two honest notes on the `persist = TRUE` path: it returns `duckdb_read_csv`'s own result invisibly (a side-effect function), and calling it again with the same `name` on the same existing database re-reads the CSV into the existing table - the rows add up, they do not replace. Remove the database first (`cleanup()`) for a fresh ingest. Also, `duckdb_read_csv` itself leaves an empty file named `duckdb` in the working directory; that is duckdb-r behaviour, not something `duckdf` can tidy.
+
+### cleanup
+
+Removes all traces of the named on-disk DuckDB database (the file plus any `.wal`/`.tmp` sidecars) from the current working directory, and closes the shared connection. Returns, invisibly, the vector of files it removed - missing files are not an error, so no quacking about it.
 
 ```r
 duckdf::cleanup("mtcars")
 ```
 
-This package also supports DuckDB's CSV reader. In the spirit of R packages using obscure verbs to describe functions, in this package we have `duckdf::ingest()`
+### duckdf_views
 
 ```r
-duckdf::ingest(name = "descriptive_name", 
-              file = "filename.csv", 
-              persist = TRUE)
+duckdf::duckdf_views()
 ```
-The above will ingest the file called `filename.csv`, if found in the current working directory, into a `duckdb` database named, `descriptive_name`, and save it to disk. The single table in the database will also be called `descriptive_name`. This data can then be queried with `duckdf(query, persist = TRUE)` or `duckdf_persist()`. 
 
-If `persist = FALSE`, only a dataframe in the global environment is created, via a `duckdb` virtual table intermediate, and then `duckdf()` may be used to query it directly.
-
-It is also possible to define the returned object as either a `data.table` or `tibble`. The default returned object is a `data.frame`.
-
-```r
-duckdf::ingest(name = "descriptive_name", 
-              file = "filename.csv", 
-              persist = FALSE,
-              object_type = "data.table")
-```
+A read-only listing of the views currently registered on the shared connection: the view name and the class of the backing R object. Empty (not an error) when nothing is registered. A pure listing call does open the shared connection if it was not open - an empty listing proves the connection exists.
 
 ## Benchmarks
 
-Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good.
+Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good, with one honest asterisk.
 
-The benchmarks below are generated on a laptiop with an i7-8565U CPU. If you try these numbers yourself, the results will differ but the general themes should remain the same.
+The full harness lives in `bench/run_benchmarks.R` (seven arms, four fixed tasks, cold/warm split, memory recorded, results checked for equivalence before anything is timed) and its output article in `bench/results.md`. Warm medians, in milliseconds, from the single official run on a full-time Linux machine:
 
-The current `duckdf` SELECT functions have been vaguely tested against other popular approaches including `data.table`, `dplyr`, `dbplyr`, `tidyquery` and `sqldf`.
+| arm | simple SELECT | filter + aggregate, 1M rows | join, 1M rows | window, 1M rows |
+|---|---|---|---|---|
+| duckdf 0.2.0 | 5.3 | 93 | 131 | 65 |
+| raw duckdb-r (DBI) | 2.9 | 95 | 156 | 62 |
+| sqldf (SQLite) | 30 | 802 | 1190 | 799 |
+| data.table | 0.8 | 31 | 80 | 20 |
+| dplyr (plain) | 2.5 | 35 | 116 | 31 |
+| duckplyr | 4.5 | 80 | 236 | 58 |
+| dbplyr + duckdb | 50 | 80 | 143 | 136 |
 
-Coinsidering only simple queries, `duckdf()` is significantly faster than `sqldf` and `tidyquery`, somewhat faster than the current implementation of `dbplyr`, not quite as fast as `dplyr` and much, much slower than `data.table`. In fact, if you'd like to query a `data.table` more slowly, `duckdf` can support that too.
+Reading it honestly:
 
-`duckdf_persist()` is slow because it writes or reads a `duckdf` database to disk on each iteration.
+- Against raw duckdb-r (the wrapper-overhead self-gate), duckdf is within the 1.10x band on the 1M-row tasks: 0.98x, 0.84x and 1.05x. On the trivial SELECT it is 1.82x - the extraction cost dominates a 2.9 ms call, and we state that failure plainly rather than hiding it. If you want to fly as fast as possible on tiny queries, use `df_name`.
+- Against sqldf, duckdf is 5.7x to 12.2x faster warm, on every task. The gap lives in the model, not the warm-up: sqldf imports your dataframe into SQLite on every query.
+- data.table remains much, much faster than everything on this table. In fact, if you'd like to query a `data.table` more slowly, `duckdf` can support that too - and with `as.data.table = TRUE` it will even hand the result back as one.
+- Memory is where zero-copy registration shows: duckdf allocates about 1.8 KB per query on the 1M-row tasks, against data.table's 28-65 MB and dplyr's 43-109 MB of materialisation.
 
-```r
-# duckdb v0.2.4
-library(duckdb)
-library(duckdf)
-# dplyr 1.0.3
-library(dplyr)
-# dbplyr 2.0.0
-library(dbplyr)
-library(microbenchmark)
-# sqldf 0.4-11
-library(sqldf)
-# data.table 1.13.7
-library(data.table)
-# tidyquery 0.2.1
-library(tidyquery)
-library(ggplot2)
+Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results. The harness is in the package precisely so you can produce your own.
 
-# Make a data.table
-mtcars_data_table <- data.table(mtcars)
+But wait, there's more: [older 2021 benchmarks](duckdf_benchmarks.png) (and the [tidyquery comparison](vs_tidyquery_benchmarks.png)) are kept in the repository as historical artifacts, from when duckdb was 0.2.4 and this package was a younger duck.
 
-# dbplyr test function
-dbplyr_test <- function() {
-    con <- dbConnect(duckdb::duckdb(), ":memory:")
+## AI assistance
 
-    copy_to(con, mtcars, "mtcars_dbplyr", temporary = FALSE)
+The code in this repository was written with the assistance of a large language model and reviewed by its maintainer.
 
-    mtcars_db <- tbl(con, "mtcars_dbplyr")
+## License
 
-    DBI::dbDisconnect(con, shutdown = TRUE)
-
-    mtcars_result <- mtcars_db %>%
-    dplyr::filter(disp >= 200) %>%
-    dplyr::select(mpg,cyl)
-
-    return(mtcars_result)
-
-}
-
-# Run the benchmark as often as you like
-duck_bench <- microbenchmark(times=500,
-                             # sqldf library
-                             sqldf = {sqldf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
-                             # tidyquery library
-                             tidyquery =  {query("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
-                             # duckdf library
-                             duckdf = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200")},
-                             duckdf_df_name = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
-                                              df_name = "mtcars")},
-                             duckdf_persist = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
-                                              persist = TRUE)},
-                             duckdf_persist_named = {duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200", 
-                                                    persist = TRUE, 
-                                                    db_name = "mt_cars")},
-                             # data.table library
-                             data_table = {mtcars_data_table[disp >= 200, c("mpg", "cyl"),]},
-                             # dplyr library
-                             dplyr = {mtcars %>%
-                               dplyr::filter(disp >= 200) %>%
-                               dplyr::select(mpg,cyl)},
-                             # dbplyr library
-                             dbplyr = {dbplyr_test()}
-                            )
-
-autoplot(duck_bench)
-```
-
-<img align="center" src="duckdf_benchmarks.png" width = "1024">
-
-But wait, there's more. A more complex query benchmark, this time compared to `tidyquery` using the SQL example from their [README page](https://github.com/ianmcook/tidyquery), and the `dplyr` equivalent generated through the `tidyquery` `show_dplyr()` function. The result is different and the `duckdb` and `duckdf` combination appear to be quickest.
-
-```r
-# duckdb 0.2.4
-library(duckdb)
-library(duckdf)
-# dplyr 1.0.3
-library(dplyr)
-# tidyquery 0.2.1
-library(tidyquery)
-library(microbenchmark)
-library(ggplot2)
-library(nycflights13)
-
-vs_tidyquery <- microbenchmark(times = 500,
-
-                              tidyquery = {
-                                tidyquery::query(
-                              "SELECT origin, dest,
-                                  COUNT(flight) AS num_flts,
-                                  round(SUM(seats)) AS num_seats,
-                                  round(AVG(arr_delay)) AS avg_delay
-                                FROM flights f LEFT OUTER JOIN planes p
-                                  ON f.tailnum = p.tailnum
-                                WHERE distance BETWEEN 200 AND 300
-                                  AND air_time IS NOT NULL
-                                GROUP BY origin, dest
-                                HAVING num_flts > 3000
-                                ORDER BY num_seats DESC, avg_delay ASC
-                                LIMIT 2;"
-                                                )
-                                          },
-
-                              duckdf = {
-                                duckdf(
-                              "SELECT origin, dest,
-                                  COUNT(flight) AS num_flts,
-                                  round(SUM(seats)) AS num_seats,
-                                  round(AVG(arr_delay)) AS avg_delay
-                                FROM flights f LEFT OUTER JOIN planes p
-                                  ON f.tailnum = p.tailnum
-                                WHERE distance BETWEEN 200 AND 300
-                                  AND air_time IS NOT NULL
-                                GROUP BY origin, dest
-                                HAVING COUNT(flight) > 3000
-                                ORDER BY num_seats DESC, avg_delay ASC
-                                LIMIT 2;"
-                                      )
-                                        },
-
-                               duckdf_named = {
-                                duckdf(
-                              "SELECT origin, dest,
-                                  COUNT(flight) AS num_flts,
-                                  round(SUM(seats)) AS num_seats,
-                                  round(AVG(arr_delay)) AS avg_delay
-                                FROM flights f LEFT OUTER JOIN planes p
-                                  ON f.tailnum = p.tailnum
-                                WHERE distance BETWEEN 200 AND 300
-                                  AND air_time IS NOT NULL
-                                GROUP BY origin, dest
-                                HAVING COUNT(flight) > 3000
-                                ORDER BY num_seats DESC, avg_delay ASC
-                                LIMIT 2;",
-                                df_name = c("flights", "planes")
-                                      )
-                                        },
-
-                              dplyr = {
-                                flights %>%
-                                  left_join(planes, by = "tailnum", suffix = c(".f", ".p"), na_matches = "never") %>%
-                                  rename(f.year = "year.f", p.year = "year.p") %>%
-                                  filter(dplyr::between(distance, 200, 300) & !is.na(air_time)) %>%
-                                  group_by(origin, dest) %>%
-                                  filter(sum(!is.na(flight)) > 3000) %>%
-                                  summarise(num_flts = sum(!is.na(flight)), 
-                                            num_seats = round(sum(seats, na.rm = TRUE)), 
-                                            avg_delay = round(mean(arr_delay, 
-                                            na.rm = TRUE))) %>%
-                                  ungroup() %>%
-                                  arrange(dplyr::desc(num_seats), avg_delay) %>%
-                                  head(2)
-                                      }
-                    )
-
-autoplot(vs_tidyquery)
-```
-<img align="center" src="vs_tidyquery_benchmarks.png" width = "1024">
-
-Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results.
-
+AGPL-3. See `LICENSE`.

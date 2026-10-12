@@ -15,9 +15,16 @@
 #' @param files String. The name of the CSV file to ingest. File must
 #'   be located in the current working directory. Required.
 #' @param persist Logical. If TRUE the CSV lands as table \code{name}
-#'   in a new on-disk database file \code{name}; the result is returned
-#'   invisibly (side-effect function). If FALSE the ingested data is
-#'   returned as an object of \code{object_type}.
+#'   in a new on-disk database file \code{name}; the
+#'   \code{duckdb_read_csv} result is returned invisibly (a count;
+#'   side-effect function). If FALSE the ingested data is
+#'   returned as an object of \code{object_type}. Calling again with
+#'   the same \code{name} on an existing database re-reads the CSV
+#'   into the existing table: the rows add up, they do not replace -
+#'   remove the database first (\code{cleanup()}) for a fresh ingest.
+#'   Note that \code{duckdb_read_csv} itself leaves an empty file
+#'   named \code{duckdb} in the working directory; that is duckdb-r
+#'   behaviour.
 #' @param object_type String. The type of object to return when
 #'   \code{persist = FALSE}: "data.frame" (default), "data.table" or
 #'   "tibble".

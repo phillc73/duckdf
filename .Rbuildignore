@@ -3,3 +3,5 @@
 .Rhistory
 ^docs/
 ^run_tests\.sh$
+^duckdf_benchmarks\.png$
+^vs_tidyquery_benchmarks\.png$

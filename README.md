@@ -207,7 +207,7 @@ Reviewing these numbers with clarity:
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results. The harness is in the package precisely so you can produce your own.
 
-Ancient stuff: [older 2021 benchmarks](duckdf_benchmarks.png) (and the [tidyquery comparison](vs_tidyquery_benchmarks.png)) are kept in the repository as historical artifacts, from when duckdb was 0.2.4 and this package was a duckling.
+Ancient stuff: [older 2021 benchmarks](https://github.com/phillc73/duckdf/blob/master/duckdf_benchmarks.png) (and the [tidyquery comparison](https://github.com/phillc73/duckdf/blob/master/vs_tidyquery_benchmarks.png)) are kept in the repository as historical artifacts, from when duckdb was 0.2.4 and this package was a duckling.
 
 ## Artificial Duck Assistance
 

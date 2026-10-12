@@ -56,7 +56,7 @@ gander <- function(db_name, show_types = FALSE) {
       }
       head
     })
-    setNames(out, names)
+    stats::setNames(out, names)
   })
   tables
 }

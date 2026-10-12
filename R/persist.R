@@ -21,11 +21,11 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
       }
       obj
     })
-    tables <- c(tables, setNames(resolved, df_name))
+    tables <- c(tables, stats::setNames(resolved, df_name))
   }
   if (is.null(df) && is.null(df_name)) {
     refs <- table_refs(query, con, duckdf_frame_candidates(env))
-    tables <- setNames(lapply(refs, function(n) get(n, envir = env)), refs)
+    tables <- stats::setNames(lapply(refs, function(n) get(n, envir = env)), refs)
   }
   tables
 }

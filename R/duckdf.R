@@ -115,12 +115,12 @@ duckdf <- function(query, persist = FALSE, df_name = NULL, df = NULL,
       }
       obj
     })
-    dfs <- c(dfs, setNames(resolved, df_name))
+    dfs <- c(dfs, stats::setNames(resolved, df_name))
   }
   if (is.null(df) && is.null(df_name)) {
     con <- duckdf_con()
     refs <- table_refs(query, con, duckdf_frame_candidates(env))
-    dfs <- setNames(lapply(refs, function(n) get(n, envir = env)), refs)
+    dfs <- stats::setNames(lapply(refs, function(n) get(n, envir = env)), refs)
   }
 
   con <- duckdf_con()

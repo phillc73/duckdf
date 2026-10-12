@@ -92,3 +92,19 @@ test_that("offline persist with no tables demands db_name explicitly", {
                  class = "input_error")
   })
 })
+
+test_that("offline df= path pins the degraded multi-statement and DDL passthrough", {
+  restore <- force_offline()
+  on.exit(restore(), add = TRUE)
+  con <- duckdf:::duckdf_con()
+  on.exit(tryCatch(DBI::dbExecute(con, "DROP TABLE ddl_passthrough"),
+                   error = function(e) NULL), add = TRUE)
+  res <- duckdf("SELECT SUM(x) AS s FROM d; SELECT 99 AS z",
+                df = list(d = data.frame(x = 1:6)))
+  expect_equal(res$z, 99)
+  invisible(duckdf("CREATE TABLE ddl_passthrough AS SELECT 1 AS a",
+                   df = list(d = data.frame(x = 1))))
+  tbls <- DBI::dbGetQuery(con,
+    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'")
+  expect_true("ddl_passthrough" %in% tbls$table_name)
+})

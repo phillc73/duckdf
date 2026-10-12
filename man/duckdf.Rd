@@ -15,8 +15,9 @@ duckdf(
 )
 }
 \arguments{
-\item{query}{String. A single SQL statement (multi-statement
-queries are rejected). Required.}
+\item{query}{String. A single SQL statement (multi-statement queries
+are rejected whenever the json extension is available; in its
+absence the degraded path executes them last-wins). Required.}
 
 \item{persist}{Logical. If TRUE, delegate to \code{persist()} for an
 on-disk database (see that function).}
@@ -31,7 +32,9 @@ only by \code{cleanup()}.}
 
 \item{df}{Named list of dataframes - registered under their list
 names; those names are the extraction candidate scope. Preferred
-form inside functions: no caller-frame dependency.}
+form inside functions: no caller-frame dependency. When the json
+extension is unavailable, the degraded path passes DDL and
+multi-statement queries through as \code{df_name} does.}
 
 \item{params}{Parameter list forwarded to \code{DBI::dbGetQuery()}
 untouched; use DuckDB \code{?}/\code{$1} placeholders in the query.}
@@ -55,7 +58,12 @@ The query result: data.frame by default, data.table when
 Bare queries (no \code{df}/\code{df_name}) use DuckDB's
   json extension to extract table names; machines where the
   extension cannot be autoloaded should pass \code{df_name} or
-  \code{df}, which never touch the extractor.
+  \code{df} (\code{df} runs a once-per-session availability probe;
+  neither form needs the extension for its work). Offline, the
+  degraded path executes multi-statement queries last-wins and
+  passes DDL through, mirroring \code{df_name}'s documented
+  passthrough semantics, and scope errors surface as engine errors
+  at execution.
 }
 \examples{
 \dontrun{

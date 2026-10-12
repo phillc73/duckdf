@@ -51,6 +51,12 @@ The query result: data.frame by default, data.table when
 \code{duckdf} runs a SQL query against R dataframes registered as
   zero-copy DuckDB views. Like SQL? Like dataframes? Like ducks?
 }
+\details{
+Bare queries (no \code{df}/\code{df_name}) use DuckDB's
+  json extension to extract table names; machines where the
+  extension cannot be autoloaded should pass \code{df_name} or
+  \code{df}, which never touch the extractor.
+}
 \examples{
 \dontrun{
 

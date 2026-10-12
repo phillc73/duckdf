@@ -32,6 +32,7 @@ test_that("df_name registers verbatim, extractor not invoked", {
 })
 
 test_that("caller-frame dataframes are found without df or df_name", {
+  skip_if_not(duckdf:::duckdf_json_available())
   frame_df <- data.frame(a = 1:3, b = c("p", "q", "r"))
   res <- duckdf("SELECT a FROM frame_df WHERE b = 'q'")
   expect_equal(res$a, 2)
@@ -48,6 +49,7 @@ test_that("params pass through with ? and $1 placeholders", {
 })
 
 test_that("file paths pass through, never registered", {
+  skip_if_not(duckdf:::duckdf_json_available())
   csv <- file.path(tempdir(), "duckdf_pass.csv")
   on.exit(unlink(csv), add = TRUE)
   write.csv(data.frame(x = 1:3, y = c("a", "b", "c")), csv, row.names = FALSE)
@@ -70,6 +72,7 @@ test_that("persist = TRUE delegates to the on-disk path", {
 })
 
 test_that("missing object in scope is missing_object_error", {
+  skip_if_not(duckdf:::duckdf_json_available())
   expect_error(duckdf("SELECT * FROM absolutely_missing_df"),
                regexp = "absolutely_missing_df",
                class = "missing_object_error")
@@ -83,6 +86,7 @@ test_that("input errors precede any connection work", {
 })
 
 test_that("a failing query leaves no dangling view, connection reusable", {
+  skip_if_not(duckdf:::duckdf_json_available())
   d <- data.frame(x = 1)
   expect_error(
     duckdf("SELECT * FROM d WHERE no_such_col", df = list(d = d)),
@@ -98,6 +102,7 @@ test_that("a failing query leaves no dangling view, connection reusable", {
 # scope; out-of-scope references
 # fail as missing_object_error before registration
 test_that("df list is the candidate scope, out-of-scope names error", {
+  skip_if_not(duckdf:::duckdf_json_available())
   df1 <- data.frame(x = 1:3)
   expect_error(
     duckdf("SELECT * FROM df1 JOIN outsider ON 1 = 1",
@@ -107,6 +112,7 @@ test_that("df list is the candidate scope, out-of-scope names error", {
 })
 
 test_that("df given with an unparseable query is a parse_error", {
+  skip_if_not(duckdf:::duckdf_json_available())
   expect_error(
     duckdf("SELECT FROM FROM", df = list(df1 = data.frame(x = 1))),
     regexp = "syntax error",

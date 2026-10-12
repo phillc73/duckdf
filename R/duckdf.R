@@ -33,6 +33,11 @@ duckdf_coerce_result <- function(result, as.data.table) {
 #' \code{duckdf} runs a SQL query against R dataframes registered as
 #'   zero-copy DuckDB views. Like SQL? Like dataframes? Like ducks?
 #'
+#' @details Bare queries (no \code{df}/\code{df_name}) use DuckDB's
+#'   json extension to extract table names; machines where the
+#'   extension cannot be autoloaded should pass \code{df_name} or
+#'   \code{df}, which never touch the extractor.
+#'
 #' @param query String. A single SQL statement (multi-statement
 #'   queries are rejected). Required.
 #' @param persist Logical. If TRUE, delegate to \code{persist()} for an
@@ -113,8 +118,13 @@ duckdf <- function(query, persist = FALSE, df_name = NULL, df = NULL,
     dfs <- c(dfs, df)
     if (is.null(df_name)) {
       # df names are the extraction candidate scope:
-      # parse and scope failures surface before registration
-      table_refs(query, duckdf_con(), names(dfs))
+      # parse and scope failures surface before registration;
+      # validation only, skipped when the json extension is
+      # unavailable (CR-001 Track A: the whole list registers and
+      # out-of-scope names then error engine-side at execution)
+      if (duckdf_json_available()) {
+        table_refs(query, duckdf_con(), names(dfs))
+      }
     }
   }
   if (!is.null(df_name)) {

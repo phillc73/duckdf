@@ -51,6 +51,13 @@ The results of the SQL statement: data.frame by default,
   in the current working directory, creating it (and writing the
   queried dataframes as tables) when it does not exist.
 }
+\details{
+Bare queries (no \code{df}/\code{df_name}) use DuckDB's
+  json extension to extract table names; machines where the
+  extension cannot be autoloaded should pass \code{df_name} or
+  \code{df} together with \code{db_name}, which never touch the
+  extractor.
+}
 \examples{
 \dontrun{
 

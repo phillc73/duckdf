@@ -45,6 +45,7 @@ test_that("persist writes multiple tables via the df list", {
 })
 
 test_that("connection is closed on a write error (2021 leak fixed)", {
+  skip_if_not(duckdf:::duckdf_json_available())
   dir <- tempdir()
   on.exit(unlink(file.path(dir, "err_test",
                            paste0("err_test", c(".wal", ".tmp"))),
@@ -61,6 +62,7 @@ test_that("connection is closed on a write error (2021 leak fixed)", {
 # df given (no df_name): df names are the candidate scope; parse and
 # scope failures surface before any disk work
 test_that("persist df list scopes extraction, out-of-scope errors", {
+  skip_if_not(duckdf:::duckdf_json_available())
   df1 <- data.frame(x = 1:3)
   expect_error(
     persist("SELECT * FROM df1 JOIN outsider ON 1 = 1",
@@ -70,6 +72,7 @@ test_that("persist df list scopes extraction, out-of-scope errors", {
 })
 
 test_that("persist df given with an unparseable query is a parse_error", {
+  skip_if_not(duckdf:::duckdf_json_available())
   expect_error(
     persist("SELECT FROM FROM", df = list(df1 = data.frame(x = 1))),
     regexp = "syntax error",
@@ -77,6 +80,7 @@ test_that("persist df given with an unparseable query is a parse_error", {
 })
 
 test_that("persist db_name-given create path also scopes extraction", {
+  skip_if_not(duckdf:::duckdf_json_available())
   df1 <- data.frame(x = 1:3)
   withr::with_dir(tempdir(), {
     expect_error(

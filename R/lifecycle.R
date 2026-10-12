@@ -44,6 +44,23 @@ duckdf_shutdown <- function(e = .duckdf) {
   invisible(NULL)
 }
 
+# Cached probe: can the shared connection serialize SQL to JSON? The
+# json extension may be missing (check farms, air-gapped installs);
+# callers use FALSE to skip validation-only extraction passes. Probe
+# only - duckdf never installs, downloads or loads extensions
+# (CR-001 Track A, option A)
+duckdf_json_available <- function() {
+  if (is.null(.duckdf$json_available)) {
+    .duckdf$json_available <- isTRUE(tryCatch({
+      DBI::dbGetQuery(duckdf_con(),
+        "SELECT json_serialize_sql(CAST(? AS VARCHAR)) AS j",
+        params = list("SELECT 1"))
+      TRUE
+    }, error = function(e) FALSE))
+  }
+  .duckdf$json_available
+}
+
 # A name already visible as a view is a collision error, not a
 # silent overwrite (0.1.2 behaviour). The check runs only on the
 # engine's own re-register error (a precheck round trip costs

@@ -15,6 +15,7 @@ test_that("non-collision register failures stay engine errors", {
 
 # Multi-statement queries are rejected, not silent last-wins
 test_that("multi-statement queries are input_error", {
+  skip_if_not(duckdf:::duckdf_json_available())
   mtcars <- datasets::mtcars
   expect_error(
     duckdf("SELECT COUNT(*) AS n FROM mtcars; SELECT COUNT(*) AS n2 FROM mtcars"),
@@ -29,6 +30,7 @@ test_that("multi-statement queries are input_error", {
 # Non-SELECT via the extractor is parse_error with a message
 # directing to df_name, not a false "could not parse"
 test_that("non-SELECT queries direct to df_name, no false parse claim", {
+  skip_if_not(duckdf:::duckdf_json_available())
   expect_error(
     duckdf("CREATE TABLE zz_tri AS SELECT 1 AS a"),
     regexp = "Only SELECT.*df_name",

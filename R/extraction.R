@@ -40,7 +40,13 @@ duckdf_classify_serialize_error <- function(con, e) {
   if (inherits(probe, "error")) {
     duckdf_stop("serialize_unavailable_error",
       paste0("json_serialize_sql is unavailable in the linked DuckDB (",
-             conditionMessage(probe), "); pass df_name or df explicitly"))
+             conditionMessage(probe),
+             "); pass df_name or df explicitly, or install the json ",
+             "extension offline: pre-download ",
+             "json.duckdb_extension.gz from extensions.duckdb.org on ",
+             "any networked machine and INSTALL or LOAD it by path - ",
+             "see https://duckdb.org/docs/current/extensions/",
+             "advanced_installation_methods"))
   }
   duckdf_stop("parse_error",
     paste0("DuckDB could not parse the query: ", conditionMessage(e)))

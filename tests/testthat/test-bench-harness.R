@@ -3,6 +3,8 @@
 
 test_that("bench harness runs all constructible arms on tiny data", {
   skip_if_not_installed("duckdb")
+  # the duckdf arm runs bare queries through the extractor
+  skip_if_not(duckdf:::duckdf_json_available())
   harness <- file.path("..", "..", "bench", "run_benchmarks.R")
   skip_if_not(file.exists(harness), "bench harness present")
   env <- new.env(parent = globalenv())

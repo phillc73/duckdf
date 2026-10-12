@@ -12,8 +12,11 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
     tables <- c(tables, df)
     if (is.null(df_name)) {
       # df names are the extraction candidate scope:
-      # validation only, the create path registers the whole list
-      table_refs(query, con, names(tables))
+      # validation only, the create path registers the whole list;
+      # skipped when the json extension is unavailable (CR-001 A)
+      if (duckdf_json_available()) {
+        table_refs(query, con, names(tables))
+      }
     }
   }
   if (!is.null(df_name)) {
@@ -40,6 +43,12 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
 #' \code{persist} executes a query against an on-disk duckdb database
 #'   in the current working directory, creating it (and writing the
 #'   queried dataframes as tables) when it does not exist.
+#'
+#' @details Bare queries (no \code{df}/\code{df_name}) use DuckDB's
+#'   json extension to extract table names; machines where the
+#'   extension cannot be autoloaded should pass \code{df_name} or
+#'   \code{df} together with \code{db_name}, which never touch the
+#'   extractor.
 #'
 #' @param query String. A single SQL statement (multi-statement
 #'   queries are rejected). The name of the
@@ -107,14 +116,23 @@ persist <- function(query, db_name = NULL, df = NULL, df_name = NULL,
 
   env <- parent.frame()
   if (is.null(db_name)) {
-    con <- duckdf_con()
     tables <- duckdf_resolve_tables(query, df, df_name, env)
-    refs <- table_refs(query, con, names(tables))
-    if (length(refs) == 0) {
-      duckdf_stop("input_error",
-        "no table reference in the query; pass db_name explicitly")
+    if (duckdf_json_available()) {
+      refs <- table_refs(query, duckdf_con(), names(tables))
+      if (length(refs) == 0) {
+        duckdf_stop("input_error",
+          "no table reference in the query; pass db_name explicitly")
+      }
+      db_name <- refs[1]
+    } else {
+      # offline derivation (CR-001 A): the first df-list/df_name name;
+      # a bare offline query cannot be extracted and demands db_name
+      if (length(tables) == 0) {
+        duckdf_stop("input_error",
+          "no table reference in the query; pass db_name explicitly")
+      }
+      db_name <- names(tables)[1]
     }
-    db_name <- refs[1]
     create <- TRUE
   } else {
     create <- !file.exists(db_name)

@@ -104,6 +104,12 @@ duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
 
 `data.table` stays in `Suggests`; if it is not installed the error tells you how to fix that rather than guessing.
 
+### The json extension and offline machines
+
+Bare queries (no `df`/`df_name`) lean on DuckDB's `json` extension to find table names in the parse tree. DuckDB autoloads it on first use, which downloads about 33MB once from extensions.duckdb.org and caches it in `~/.duckdb/extensions/`; on any networked machine that one-time step is invisible.
+
+Offline or size-sensitive users have a clean route: `df_name` or `df` never touch the extractor, so they never need the extension and are marginally faster per call. The trade is that scope errors move from duckdf's own `parse_error`/`missing_object_error` to DuckDB's engine error at execution. Air-gapped installs can pre-download `json.duckdb_extension.gz` once on any networked machine and `INSTALL`/`LOAD` it by path, per [DuckDB's advanced installation methods](https://duckdb.org/docs/current/extensions/advanced_installation_methods); CI fleets can point `DUCKDB_EXTENSION_DIRECTORY` at one shared cache.
+
 ### persist
 
 ```r
@@ -111,7 +117,7 @@ duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
        persist = TRUE)
 ```
 
-Same SQL, but an on-disk DuckDB database is created in the current working directory, the queried dataframes are written into it as real tables, and the query runs against the file. The database's name defaults to the first table in the query; give it a different one with `db_name`. The function `duckdf::persist()` does the same directly:
+Same SQL, but an on-disk DuckDB database is created in the current working directory, the queried dataframes are written into it as real tables, and the query runs against the file. The database's name defaults to the first table in the query (the first `df`/`df_name` name when the json extension is unavailable); give it a different one with `db_name`. The function `duckdf::persist()` does the same directly:
 
 ```r
 duckdf::persist("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",

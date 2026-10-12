@@ -181,12 +181,29 @@ The full harness lives in `bench/run_benchmarks.R` (seven arms, four fixed tasks
 | duckplyr | 4.5 | 80 | 236 | 58 |
 | dbplyr + duckdb | 50 | 80 | 143 | 136 |
 
+Speed is only half the story. The same harness records allocations per query - what each tool has to build in memory to answer the question:
+
+| arm | simple SELECT | filter + aggregate, 1M rows | join, 1M rows | window, 1M rows |
+|---|---|---|---|---|
+| duckdf 0.2.0 | 1.8 KB | 1.8 KB | 1.8 KB | 2.3 MB |
+| raw duckdb-r (DBI) | 936 B | 936 B | 936 B | 2.3 MB |
+| sqldf (SQLite) | 18.7 KB | 14.9 KB | 24.8 KB | 3.9 MB |
+| data.table | 49.1 KB | 27.8 MB | 65 MB | 15.9 MB |
+| dplyr (plain) | 4.6 KB | 42.9 MB | 109 MB | 25.9 MB |
+| duckplyr | 7.3 KB | 25.7 MB | 35.7 MB | 10.3 MB |
+| dbplyr + duckdb | 245 KB | 351 KB | 517 KB | 2.8 MB |
+
+A duck does not need the whole flock to fly fast: registration is a zero-copy view, so duckdf allocates about 1.8 KB to query a million rows, where data.table and dplyr materialise 28-109 MB of intermediates for the same answer. Three notes so the table reads straight:
+
+- duckdf sits 0.9 KB above raw duckdb-r - the same fixed extraction cost that shows in the 1.82x trivial-SELECT time above; the two tables corroborate each other.
+- The window query flips the story: every arm pays 2-16 MB there, because the query returns a large result and output materialisation dominates, not input copying. The 1.8 KB cases are the ones with small results.
+- Small numbers are not always cheap. sqldf's kilobytes hide its 1M-row SQLite import, paid in time instead (its 0.8-1.2 s columns above); dbplyr's `copy_to` happens in untimed setup. Allocations measure the timed expression only.
+
 Reviewing these numbers with clarity:
 
 - Against raw duckdb-r (the wrapper-overhead self-gate), duckdf is within the 1.10x band on the 1M-row tasks: 0.98x, 0.84x and 1.05x. On the trivial SELECT it is 1.82x - the extraction cost dominates a 2.9 ms call and that failure is stated plainly rather than hiding it. If you want to fly as fast as possible on tiny queries, use `df_name`.
 - Against sqldf, duckdf is 5.7x to 12.2x faster warm, on every task. The gap lives in the model, not the warm-up: sqldf imports your dataframe into SQLite on every query.
 - data.table remains much, much faster than everything on this table. In fact, if you'd like to query a `data.table` more slowly, `duckdf` can support that too - and with `as.data.table = TRUE` it will even hand the result back as one.
-- Memory is where zero-copy registration shows: duckdf allocates about 1.8 KB per query on the 1M-row tasks, against data.table's 28-65 MB and dplyr's 43-109 MB of materialisation.
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results. The harness is in the package precisely so you can produce your own.
 

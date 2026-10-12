@@ -1,6 +1,6 @@
-# Lifecycle rules 1-8, one test each (spec-lifecycle-and-errors.md)
+# Lifecycle behaviour, one test each
 
-# Rule 1: lazy creation on first use
+# Lazy creation on first use
 test_that("shared connection opens lazily", {
   duckdf:::duckdf_shutdown()
   expect_null(duckdf:::.duckdf$con)
@@ -9,14 +9,14 @@ test_that("shared connection opens lazily", {
   expect_true(DBI::dbIsValid(con))
 })
 
-# Rule 3: warm calls reuse the same connection
+# Warm calls reuse the same connection
 test_that("warm calls reuse the shared connection", {
   con1 <- duckdf:::duckdf_con()
   con2 <- duckdf:::duckdf_con()
   expect_identical(con1, con2)
 })
 
-# Rule 2: per-call registration, view gone after the call
+# Per-call registration, view gone after the call
 test_that("views are unregistered after the call completes", {
   df <- data.frame(x = 1:3)
   res <- duckdf:::with_registered_views(
@@ -29,7 +29,7 @@ test_that("views are unregistered after the call completes", {
   expect_false("life_df" %in% views$view_name)
 })
 
-# Rule 4: cleanup() closes and shuts down; next call reopens lazily
+# cleanup() closes and shuts down; next call reopens lazily
 test_that("cleanup closes the shared connection which reopens lazily", {
   con1 <- duckdf:::duckdf_con()
   cleanup("nonexistent_db_for_rule4")
@@ -39,7 +39,7 @@ test_that("cleanup closes the shared connection which reopens lazily", {
   expect_true(DBI::dbIsValid(con2))
 })
 
-# Rule 5: finalizer registered once and shuts the driver down
+# Finalizer registered once and shuts the driver down
 test_that("GC finalizer is registered and shuts the driver down", {
   duckdf:::duckdf_con()
   expect_true(isTRUE(duckdf:::.duckdf$finalizer_registered))
@@ -49,7 +49,7 @@ test_that("GC finalizer is registered and shuts the driver down", {
   expect_true(DBI::dbIsValid(con))
 })
 
-# Rule 6: on-disk paths use a dedicated connection, closed on exit
+# On-disk paths use a dedicated connection, closed on exit
 test_that("on-disk connections are dedicated and shut down", {
   path <- file.path(tempdir(), "rule6_test.duckdb")
   on.exit(unlink(c(path, paste0(path, ".wal"), paste0(path, ".tmp"))),
@@ -66,7 +66,7 @@ test_that("on-disk connections are dedicated and shut down", {
   expect_s4_class(duckdf:::duckdf_con(), "DBIConnection")
 })
 
-# Rule 7: errors leave no dangling view; connection survives
+# Errors leave no dangling view; connection survives
 test_that("errors unregister views and keep the connection usable", {
   df <- data.frame(x = 1:3)
   expect_error(
@@ -84,7 +84,7 @@ test_that("errors unregister views and keep the connection usable", {
   expect_equal(DBI::dbGetQuery(con, "SELECT 1 AS ok")$ok, 1)
 })
 
-# Rule 8: registration collision errors, naming the view
+# Registration collision errors, naming the view
 test_that("registration collision errors with the colliding name", {
   con <- duckdf:::duckdf_con()
   duckdf:::duckdf_register_view(con, "collide_df", data.frame(x = 1))

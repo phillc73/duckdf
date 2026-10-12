@@ -1,4 +1,4 @@
-# gander() contract (spec-api-contract.md)
+# gander() contract
 
 test_that("gander returns five-row heads per table, named by table", {
   dir <- tempdir()

@@ -1,5 +1,5 @@
 # Triage drafts
 
 Paste-ready comments for the two items open on the 2021 repository.
-NOT posted: remote writes need explicit owner approval at the
-execution moment. Post from this repo when approved.
+NOT posted: remote writes need the maintainer's explicit go. Post
+from this repo when approved.

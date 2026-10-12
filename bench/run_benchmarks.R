@@ -1,5 +1,5 @@
 # duckdf 0.2.0 benchmark harness: AGPL-3, see README
-# Four fixed tasks, seven arms, per docs/duckdf-020/bench-gate-inputs.md
+# Four fixed tasks, seven arms
 
 # Data --------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ build_data <- function(tiny = FALSE, seed = 2021) {
   list(mtcars = mtcars, big = big, small = small)
 }
 
-# Equivalence (resolution 9): sorted all.equal vs the data.table arm,
+# Equivalence: sorted all.equal vs the data.table arm,
 # class and typing differences recorded as observations, not coerced
 
 normalise <- function(res) {
@@ -307,7 +307,7 @@ arm_registry <- function(data) {
 # measurement - a wrapper function would force its promise once and cache
 
 measure_arm_task <- function(arm, task, tiny, reference) {
-  # equivalence output first, on the cold state, untimed (resolution 9)
+  # equivalence output first, on the cold state, untimed
   arm$reset()
   eq_res <- tryCatch(
     equivalence_check(reference, arm$run(task)),
@@ -346,7 +346,7 @@ run_benchmarks <- function(tiny = FALSE, arms = NULL, seed = 2021,
   reg <- arm_registry(data)
   if (is.null(arms)) arms <- names(reg)
 
-  # data.table arm is the equivalence reference (resolution 9)
+  # data.table arm is the equivalence reference
   reg$data_table$reset()
   ref_big <- reg$data_table$run("q2") # triggers dt build
   ref_out <- setNames(
@@ -452,7 +452,7 @@ write_results <- function(bench_out, path) {
            ". Full-time machine, single harness run, bench::mark"),
     "median (cold: single call from reset state; warm: min-of-N on",
     "shared state). The 4a band (1.10x raw duckdb-r, per task) is",
-    "frozen in docs/duckdf-020/bench-gate-inputs.md.",
+    "the package's wrapper-overhead self-gate.",
     "",
     "Task 4 is the labelled asymmetry cell (SQLite window support is",
     "newer than DuckDB's): results recorded, not ranked head-to-head.",
@@ -463,7 +463,7 @@ write_results <- function(bench_out, path) {
     "## Claim 4a: duckdf warm median <= raw duckdb-r warm median x 1.10, per task",
     "",
     md_table(vd), "",
-    "## Equivalence observations (resolution 9)",
+    "## Equivalence observations",
     "",
     if (nrow(obs) == 0) "All arms matched the data.table reference output." else c(
       md_table(obs), "",

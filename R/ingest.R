@@ -1,5 +1,5 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
-# ingest(): duckdb_read_csv passthrough - spec-api-contract.md. The
+# ingest(): duckdb_read_csv passthrough. The
 # 2021 .GlobalEnv assign is a deliberate break: ingest() RETURNS the
 # object; missing return-class packages are package_error, not print()
 # and a NULL path.

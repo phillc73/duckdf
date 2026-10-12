@@ -1,8 +1,7 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
 # duckdf() and duckdf_views(): the query surface on the shared
-# connection - spec-api-contract.md; README covers the user-facing
-# story. duckdf() never opens or closes a connection: lifecycle.R owns
-# that.
+# connection; README covers the user-facing story. duckdf() never
+# opens or closes a connection: lifecycle.R owns that.
 
 # Registration candidates from the caller's frame: objects
 # duckdb_register() accepts (data.frame, data.table, tibble)
@@ -16,7 +15,7 @@ duckdf_frame_candidates <- function(env) {
 }
 
 # Return-class helper: data.table is Suggests, absence is package_error
-# with an install hint (spec-api-contract.md cross-cutting)
+# with an install hint
 duckdf_coerce_result <- function(result, as.data.table) {
   if (!isTRUE(as.data.table)) {
     return(result)
@@ -81,7 +80,7 @@ duckdf_coerce_result <- function(result, as.data.table) {
 
 duckdf <- function(query, persist = FALSE, df_name = NULL, df = NULL,
                    params = NULL, db_name = NULL, as.data.table = FALSE) {
-  # validation before any connection work (taxonomy order)
+  # validation before any connection work (error-class check order)
   assert_input(checkmate::assert_string(query, .var.name = "query"))
   if (trimws(query) == "") {
     duckdf_stop("input_error", "query must not be empty")
@@ -113,7 +112,7 @@ duckdf <- function(query, persist = FALSE, df_name = NULL, df = NULL,
   if (!is.null(df)) {
     dfs <- c(dfs, df)
     if (is.null(df_name)) {
-      # df names are the extraction candidate scope (mechanism 2):
+      # df names are the extraction candidate scope:
       # parse and scope failures surface before registration
       table_refs(query, duckdf_con(), names(dfs))
     }

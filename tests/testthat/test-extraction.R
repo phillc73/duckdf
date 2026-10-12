@@ -1,5 +1,4 @@
-# Table extraction, one test per spec rule
-# (spec-table-extraction.md test mirror obligations)
+# Table extraction, one test per extraction rule
 
 con <- duckdf:::duckdf_con()
 cands <- c("df1", "df2", "df3", "my df")
@@ -28,7 +27,7 @@ test_that("multiple JOINs extract all three sides in order", {
     c("df1", "df2", "df3"))
 })
 
-# subquery, issue #3 case: the inner dataframe must register
+# subquery: the inner dataframe must register
 test_that("a subquery extracts the inner dataframe, not the alias", {
   expect_identical(as.vector(
     duckdf:::table_refs("SELECT * FROM (SELECT x FROM df1) sub", con, cands)),
@@ -88,7 +87,7 @@ test_that("file paths are recorded, not registered", {
   expect_identical(attr(res, "file_paths"), "f.parquet")
 })
 
-# mechanism 3: a file-path-shaped name that IS a candidate dataframe
+# A file-path-shaped name that IS a candidate dataframe
 # registers - pass-through applies only to names that are not dataframes
 test_that("a candidate named like a file path is registered", {
   res <- duckdf:::table_refs('SELECT * FROM "results.csv"',

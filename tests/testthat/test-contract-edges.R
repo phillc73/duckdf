@@ -1,5 +1,4 @@
 # Contract-edge tests: engine passthrough, escape hatches and guards
-# settled 2026-10-12
 
 # Non-collision registration failures keep their engine error; the
 # collision check runs only on the error path

@@ -1,4 +1,4 @@
-# duckdf() contract (spec-api-contract.md)
+# duckdf() contract
 
 test_that("duckdf returns a plain data.frame by default", {
   res <- duckdf("SELECT cyl, COUNT(*) AS n FROM cars_df GROUP BY cyl",
@@ -95,7 +95,7 @@ test_that("a failing query leaves no dangling view, connection reusable", {
 })
 
 # df given (no df_name): the df names are the extraction candidate
-# scope (spec-table-extraction mechanism 2); out-of-scope references
+# scope; out-of-scope references
 # fail as missing_object_error before registration
 test_that("df list is the candidate scope, out-of-scope names error", {
   df1 <- data.frame(x = 1:3)

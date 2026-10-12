@@ -1,4 +1,4 @@
-# duckdf_views() contract (spec-api-contract.md)
+# duckdf_views() contract
 
 test_that("empty view listing is an empty data.frame, not an error", {
   duckdf:::duckdf_shutdown()

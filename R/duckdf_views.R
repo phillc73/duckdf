@@ -1,6 +1,6 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
-# duckdf_views(): read-only listing of views on the shared connection -
-# spec-api-contract.md. Backing classes tracked at registration in
+# duckdf_views(): read-only listing of views on the shared connection.
+# Backing classes tracked at registration in
 # lifecycle.R (duckdb-r keeps the objects on the C side, unqueryable).
 
 #' List your registered views

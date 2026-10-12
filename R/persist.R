@@ -1,7 +1,7 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
-# persist(): on-disk query-or-create - spec-api-contract.md. The 2021
+# persist(): on-disk query-or-create. The 2021
 # create-branch leaked its connection on write error; with_disk_con()
-# closes on every exit path (lifecycle rules 6-7).
+# closes on every exit path.
 
 # Shared validation/branching for the on-disk create path: tables come
 # from the df list or the caller's frame (df_name verbatim)
@@ -11,7 +11,7 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
   if (!is.null(df)) {
     tables <- c(tables, df)
     if (is.null(df_name)) {
-      # df names are the extraction candidate scope (mechanism 2):
+      # df names are the extraction candidate scope:
       # validation only, the create path registers the whole list
       table_refs(query, con, names(tables))
     }
@@ -84,7 +84,7 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
 
 persist <- function(query, db_name = NULL, df = NULL, df_name = NULL,
                     params = NULL, as.data.table = FALSE) {
-  # validation before any connection work (taxonomy order)
+  # validation before any connection work (error-class check order)
   assert_input(checkmate::assert_string(query, .var.name = "query"))
   if (trimws(query) == "") {
     duckdf_stop("input_error", "query must not be empty")

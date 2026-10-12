@@ -1,4 +1,4 @@
-# persist() contract (spec-api-contract.md)
+# persist() contract
 
 test_that("persist creates a database, writes tables, then queries", {
   dir <- tempdir()

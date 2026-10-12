@@ -1,6 +1,6 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
-# gander(): brief look at an on-disk database - spec-api-contract.md.
-# The 2021 two-table cap and its dead duckdf_persist call are gone; a
+# gander(): brief look at an on-disk database. The
+# 2021 two-table cap and its dead duckdf_persist call are gone; a
 # missing database is a db_error, not a returned string.
 
 #' Gander at duckdbs

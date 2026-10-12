@@ -1,8 +1,7 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
 # Table extraction via the DuckDB parse tree (json_serialize_sql AST
-# walk) - spec-table-extraction.md; README covers the user-facing
-# story. No regex fallback: extraction failure is an error pointing at
-# df_name/df.
+# walk); README covers the user-facing story. No regex fallback:
+# extraction failure is an error pointing at df_name/df.
 
 # DuckDB parse tree as JSON. Parse failures come back as
 # {"error":true,...} JSON; the SQL call itself errors when the json
@@ -93,7 +92,7 @@ duckdf_ast_tables <- function(statements) {
 }
 
 # A name DuckDB reads natively from disk: csv/parquet suffix or glob
-# metacharacters (spec-table-extraction.md mechanism 3)
+# metacharacters
 duckdf_is_file_path <- function(name) {
   grepl("\\.(csv|parquet)$", name, ignore.case = TRUE) ||
     grepl("[*?\\[\\]]", name)

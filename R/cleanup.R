@@ -1,7 +1,7 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
 # cleanup(): removes the named on-disk database and sidecar files;
-# also closes the shared connection (spec-lifecycle-and-errors.md
-# rule 4). Returns the files removed, invisibly.
+# also closes the shared connection. Returns the files removed,
+# invisibly.
 
 #' Clean up your duckdbs
 #'

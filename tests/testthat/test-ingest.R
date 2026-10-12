@@ -1,4 +1,4 @@
-# ingest() contract (spec-api-contract.md)
+# ingest() contract
 
 csv_fixture <- function(dir) {
   path <- file.path(dir, "ing_test.csv")

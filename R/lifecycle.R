@@ -1,25 +1,25 @@
 # duckdf - SQL for dataframes on DuckDB (AGPL-3)
-# Shared in-memory connection lifecycle - spec-lifecycle-and-errors.md
-# rules 1-8; README covers the user-facing story.
+# Shared in-memory connection lifecycle; README covers the
+# user-facing story.
 
 .duckdf <- new.env(parent = emptyenv())
 
-# Classed base-R error; taxonomy in spec-lifecycle-and-errors.md
+# Classed base-R error; the class is stable for regexp testing
 duckdf_stop <- function(class, message) {
   err <- structure(class = c(class, "duckdf_error", "error", "condition"),
                    list(message = message))
   stop(err)
 }
 
-# checkmate failures are re-classed as input_error (taxonomy: before
-# connection)
+# checkmate failures are re-classed as input_error (checked
+# before any connection opens)
 assert_input <- function(expr) {
   tryCatch(force(expr),
            error = function(e) duckdf_stop("input_error", conditionMessage(e)))
 }
 
-# Rules 1 + 3 + 5: lazy open of the shared :memory: connection, warm
-# reuse, GC/session-end finalizer registered once
+# Lazy open of the shared :memory: connection, warm reuse, and a
+# GC/session-end finalizer registered once
 duckdf_con <- function() {
   if (is.null(.duckdf$con) || !DBI::dbIsValid(.duckdf$con)) {
     drv <- duckdb::duckdb()
@@ -33,7 +33,7 @@ duckdf_con <- function() {
   .duckdf$con
 }
 
-# Rule 4: cleanup() and the finalizer both land here; the next call
+# cleanup() and the finalizer both land here; the next call
 # reopens lazily
 duckdf_shutdown <- function(e = .duckdf) {
   con <- e$con
@@ -44,7 +44,7 @@ duckdf_shutdown <- function(e = .duckdf) {
   invisible(NULL)
 }
 
-# Rule 8: a name already visible as a view is a collision error, not a
+# A name already visible as a view is a collision error, not a
 # silent overwrite (0.1.2 behaviour). The check runs only on the
 # engine's own re-register error (a precheck round trip costs
 # 1.21 ms per registration)
@@ -68,8 +68,8 @@ duckdf_register_view <- function(con, name, df) {
   invisible(name)
 }
 
-# Rules 2 + 7: per-call registration with guaranteed unregister on
-# every exit path, success or error
+# Per-call registration with guaranteed unregister on every exit
+# path, success or error
 with_registered_views <- function(dfs, expr) {
   con <- duckdf_con()
   registered <- character(0)
@@ -86,8 +86,8 @@ with_registered_views <- function(dfs, expr) {
   force(expr)
 }
 
-# Rule 6: on-disk paths get a dedicated per-operation connection,
-# disconnect-with-shutdown on every exit path (rule 7); the shared
+# On-disk paths get a dedicated per-operation connection,
+# disconnect-with-shutdown on every exit path; the shared
 # in-memory connection is never pointed at a file. Read-only for
 # pure readers (gander never writes)
 with_disk_con <- function(db_name, fn, read_only = FALSE) {

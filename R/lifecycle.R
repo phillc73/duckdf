@@ -56,6 +56,7 @@ duckdf_register_view <- function(con, name, df) {
                         name))
   }
   duckdb::duckdb_register(con, name, df)
+  .duckdf$classes[[name]] <- class(df)[1]
   invisible(name)
 }
 
@@ -67,6 +68,7 @@ with_registered_views <- function(dfs, expr) {
   on.exit({
     for (name in registered) {
       tryCatch(duckdb::duckdb_unregister(con, name), error = function(err) NULL)
+      .duckdf$classes[[name]] <- NULL
     }
   }, add = TRUE)
   for (name in names(dfs)) {

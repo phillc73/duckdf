@@ -34,7 +34,8 @@ duckdf_coerce_result <- function(result, as.data.table) {
 #' \code{duckdf} runs a SQL query against R dataframes registered as
 #'   zero-copy DuckDB views. Like SQL? Like dataframes? Like ducks?
 #'
-#' @param query String. The SQL query. Required.
+#' @param query String. A single SQL statement (multi-statement
+#'   queries are rejected). Required.
 #' @param persist Logical. If TRUE, delegate to \code{persist()} for an
 #'   on-disk database (see that function).
 #' @param df_name Character vector of variable names holding

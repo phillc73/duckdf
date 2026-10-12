@@ -15,7 +15,8 @@ duckdf(
 )
 }
 \arguments{
-\item{query}{String. The SQL query. Required.}
+\item{query}{String. A single SQL statement (multi-statement
+queries are rejected). Required.}
 
 \item{persist}{Logical. If TRUE, delegate to \code{persist()} for an
 on-disk database (see that function).}

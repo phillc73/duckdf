@@ -14,14 +14,17 @@ persist(
 )
 }
 \arguments{
-\item{query}{String. The SQL query to execute. The name of the
+\item{query}{String. A single SQL statement (multi-statement
+queries are rejected). The name of the
 on-disk database will be the same as the first named dataframe
 in this query string, unless specified differently in
 \code{db_name} parameter. Required.}
 
 \item{db_name}{String. Specifies the name of the on disk duckdb to
 read from or write to. If an on-disk duckdb matching this name is
-not found in the current working directory, one will be created.}
+not found in the current working directory, one will be created
+(writing the df/df_name tables); if it exists, df and df_name are
+an error - the query runs against the data already on disk.}
 
 \item{df}{Named list of dataframes to write as tables when creating
 the database; those names are the extraction candidate scope.}

@@ -56,8 +56,17 @@ test_that("file paths pass through, never registered", {
   expect_equal(nrow(duckdf_views()), 0)
 })
 
-test_that("persist = TRUE errors until persist() lands", {
-  expect_error(duckdf("SELECT 1", persist = TRUE), class = "package_error")
+test_that("persist = TRUE delegates to the on-disk path", {
+  dir <- tempdir()
+  on.exit(unlink(file.path(dir, "del_test",
+                           paste0("del_test", c(".wal", ".tmp"))),
+                 recursive = TRUE, force = TRUE), add = TRUE)
+  withr::with_dir(dir, {
+    res <- duckdf("SELECT COUNT(*) AS n FROM dd_df", persist = TRUE,
+                  db_name = "del_test", df = list(dd_df = data.frame(x = 1:3)))
+    expect_equal(res$n, 3)
+    expect_true(file.exists(file.path(dir, "del_test")))
+  })
 })
 
 test_that("missing object in scope is missing_object_error", {

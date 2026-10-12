@@ -3,3 +3,5 @@
 export(cleanup)
 export(duckdf)
 export(duckdf_views)
+export(gander)
+export(persist)

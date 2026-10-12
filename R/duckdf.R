@@ -96,8 +96,8 @@ duckdf <- function(query, persist = FALSE, df_name = NULL, df = NULL,
   }
 
   if (isTRUE(persist)) {
-    duckdf_stop("package_error",
-      "persist() lands in Slice 4; the on-disk path is not available yet")
+    return(persist(query, db_name = db_name, df = df, df_name = df_name,
+                   params = params, as.data.table = as.data.table))
   }
 
   env <- parent.frame()

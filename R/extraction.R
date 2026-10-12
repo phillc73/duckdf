@@ -41,6 +41,7 @@ duckdf_serialize_sql <- function(con, query) {
 duckdf_ast_tables <- function(statements) {
   refs <- character(0)
   ctes <- character(0)
+  paths <- character(0)
   walk <- function(x) {
     if (!is.list(x)) {
       return(NULL)
@@ -60,6 +61,13 @@ duckdf_ast_tables <- function(statements) {
         }
       }
     }
+    if (identical(x$type, "TABLE_FUNCTION")) {
+      for (path in duckdf_func_paths(x)) {
+        if (!(path %in% paths)) {
+          paths <<- c(paths, path)
+        }
+      }
+    }
     for (part in x) {
       if (is.list(part)) {
         walk(part)
@@ -69,7 +77,7 @@ duckdf_ast_tables <- function(statements) {
   for (statement in statements) {
     walk(statement)
   }
-  list(refs = refs, ctes = ctes)
+  list(refs = refs, ctes = ctes, paths = paths)
 }
 
 # A name DuckDB reads natively from disk: csv/parquet suffix or glob
@@ -77,6 +85,24 @@ duckdf_ast_tables <- function(statements) {
 duckdf_is_file_path <- function(name) {
   grepl("\\.(csv|parquet)$", name, ignore.case = TRUE) ||
     grepl("[*?\\[\\]]", name)
+}
+
+# File arguments of table-function calls (read_csv_auto/read_parquet):
+# constant strings anywhere under the call that look like file paths
+duckdf_func_paths <- function(node) {
+  out <- character(0)
+  scan <- function(y) {
+    if (is.list(y)) {
+      for (part in y) {
+        scan(part)
+      }
+    } else if (is.character(y) && length(y) == 1L &&
+               duckdf_is_file_path(y) && !(y %in% out)) {
+      out <<- c(out, y)
+    }
+  }
+  scan(node)
+  out
 }
 
 #' Candidate dataframe references in a SQL query
@@ -109,15 +135,14 @@ table_refs <- function(query, con, candidates = NULL) {
   assert_input(checkmate::assert_character(candidates, any.missing = FALSE,
     null.ok = TRUE, .var.name = "candidates"))
   ast <- duckdf_ast_tables(duckdf_serialize_sql(con, query))
-  paths <- character(0)
   missing <- character(0)
   keep <- character(0)
   for (name in ast$refs) {
-    if (name %in% keep || name %in% paths) {
+    if (name %in% keep || name %in% ast$paths) {
       next
     }
     if (duckdf_is_file_path(name)) {
-      paths <- c(paths, name)
+      ast$paths <- c(ast$paths, name)
     } else if (name %in% candidates) {
       keep <- c(keep, name)
     } else if (!(name %in% ast$ctes)) {
@@ -130,5 +155,5 @@ table_refs <- function(query, con, candidates = NULL) {
                      "pass them via df_name or df"),
               paste0("'", missing, "'", collapse = ", ")))
   }
-  structure(keep, file_paths = paths)
+  structure(keep, file_paths = ast$paths)
 }

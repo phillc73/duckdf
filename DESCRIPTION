@@ -2,11 +2,9 @@ Package: duckdf
 Type: Package
 Title: SQL for Dataframes, but with Ducks
 Version: 0.2.0
-Authors@R: person("Phill", "Clarke", email = "phill@fastmail.com",
+Authors@R: person("Phill", "Clarke", email = "phill@mimosadev.org",
     role = c("aut", "cre"))
-Description: Like SQL? Like dataframes? Like ducks? Then duckdf is for
-    you. Run SQL queries against R dataframes on an in-memory DuckDB
-    connection: zero-copy view registration, no tidyverse dependencies.
+Description: SQL for R dataframes, with ducks.
 License: AGPL-3 | file LICENSE
 Encoding: UTF-8
 Depends:

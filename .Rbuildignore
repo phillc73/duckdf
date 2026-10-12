@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 .Rhistory
 ^docs/
+^run_tests\.sh$

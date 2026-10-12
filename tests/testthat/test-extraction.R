@@ -82,6 +82,27 @@ test_that("file paths are recorded, not registered", {
     "SELECT * FROM read_csv_auto('data/*.csv')", con, cands)
   expect_identical(as.vector(res), character(0))
   expect_identical(attr(res, "file_paths"), "data/*.csv")
+  res <- duckdf:::table_refs(
+    "SELECT * FROM 'f.parquet'", con, cands)
+  expect_identical(as.vector(res), character(0))
+  expect_identical(attr(res, "file_paths"), "f.parquet")
+})
+
+# mechanism 3: a file-path-shaped name that IS a candidate dataframe
+# registers - pass-through applies only to names that are not dataframes
+test_that("a candidate named like a file path is registered", {
+  res <- duckdf:::table_refs('SELECT * FROM "results.csv"',
+                             con, "results.csv")
+  expect_identical(as.vector(res), "results.csv")
+  expect_identical(attr(res, "file_paths"), character(0))
+})
+
+# set operations: refs from both sides, order of first appearance
+test_that("a UNION extracts both sides in order", {
+  expect_identical(
+    as.vector(duckdf:::table_refs(
+      "SELECT a FROM df1 UNION SELECT b FROM df2", con, cands)),
+    c("df1", "df2"))
 })
 
 # params passthrough: placeholders do not disturb extraction

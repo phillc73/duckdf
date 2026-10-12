@@ -4,35 +4,40 @@
 # story. No regex fallback: extraction failure is an error pointing at
 # df_name/df.
 
-# DuckDB parse tree as JSON. The probe separates "engine without
-# json_serialize_sql" from "query will not parse": the SQL function
-# returns {"error":true,...} JSON for parse failures but errors itself
-# when the json machinery is missing.
+# DuckDB parse tree as JSON. Parse failures come back as
+# {"error":true,...} JSON; the SQL call itself errors when the json
+# machinery is missing - the probe (only run on that error path)
+# separates serialize_unavailable from a genuine parse failure.
 duckdf_serialize_sql <- function(con, query) {
-  probe <- tryCatch(
-    DBI::dbGetQuery(con,
-      "SELECT json_serialize_sql(CAST(? AS VARCHAR)) AS j",
-      params = list("SELECT 1")),
-    error = function(e) e)
-  if (inherits(probe, "error")) {
-    duckdf_stop("serialize_unavailable_error",
-      paste0("json_serialize_sql is unavailable in the linked DuckDB (",
-             conditionMessage(probe), "); pass df_name or df explicitly"))
-  }
   ast <- tryCatch(
     DBI::dbGetQuery(con,
       "SELECT json_serialize_sql(CAST(? AS VARCHAR)) AS j",
       params = list(query)),
-    error = function(e) {
-      duckdf_stop("parse_error",
-        paste0("DuckDB could not parse the query: ", conditionMessage(e)))
-    })
+    error = function(e) duckdf_classify_serialize_error(con, e))
   tree <- jsonlite::fromJSON(ast$j, simplifyVector = FALSE)
   if (isTRUE(tree$error)) {
     duckdf_stop("parse_error",
       paste0("DuckDB could not parse the query: ", tree$error_message))
   }
   tree$statements
+}
+
+# Error-path classifier: if a trivial query also fails to serialize,
+# the engine lacks json_serialize_sql; otherwise the caller's query is
+# the problem and DuckDB's message passes through unguessed
+duckdf_classify_serialize_error <- function(con, e) {
+  probe <- tryCatch(
+    DBI::dbGetQuery(con,
+      "SELECT json_serialize_sql(CAST(? AS VARCHAR)) AS j",
+      params = list("SELECT 1")),
+    error = function(pe) pe)
+  if (inherits(probe, "error")) {
+    duckdf_stop("serialize_unavailable_error",
+      paste0("json_serialize_sql is unavailable in the linked DuckDB (",
+             conditionMessage(probe), "); pass df_name or df explicitly"))
+  }
+  duckdf_stop("parse_error",
+    paste0("DuckDB could not parse the query: ", conditionMessage(e)))
 }
 
 # BASE_TABLE names (order of first appearance) and CTE keys from the
@@ -141,10 +146,10 @@ table_refs <- function(query, con, candidates = NULL) {
     if (name %in% keep || name %in% ast$paths) {
       next
     }
-    if (duckdf_is_file_path(name)) {
-      ast$paths <- c(ast$paths, name)
-    } else if (name %in% candidates) {
+    if (name %in% candidates) {
       keep <- c(keep, name)
+    } else if (duckdf_is_file_path(name)) {
+      ast$paths <- c(ast$paths, name)
     } else if (!(name %in% ast$ctes)) {
       missing <- c(missing, name)
     }

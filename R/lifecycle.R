@@ -45,17 +45,25 @@ duckdf_shutdown <- function(e = .duckdf) {
 }
 
 # Rule 8: a name already visible as a view is a collision error, not a
-# silent overwrite (0.1.2 behaviour)
+# silent overwrite (0.1.2 behaviour). The check runs only on the
+# engine's own re-register error (battery F1: a precheck round trip
+# cost 1.21 ms per registration)
 duckdf_register_view <- function(con, name, df) {
-  views <- DBI::dbGetQuery(con,
-    "SELECT view_name FROM duckdb_views() WHERE NOT internal")
-  if (name %in% views$view_name) {
-    duckdf_stop("collision_error",
-                sprintf(paste0("a view named '%s' is already registered on ",
-                               "the shared connection; unregister or rename"),
-                        name))
-  }
-  duckdb::duckdb_register(con, name, df)
+  tryCatch(duckdb::duckdb_register(con, name, df),
+           error = function(e) {
+             views <- tryCatch(
+               DBI::dbGetQuery(con,
+                 "SELECT view_name FROM duckdb_views() WHERE NOT internal"),
+               error = function(pe) NULL)
+             if (!is.null(views) && name %in% views$view_name) {
+               duckdf_stop("collision_error",
+                           sprintf(paste0("a view named '%s' is already ",
+                                          "registered on the shared ",
+                                          "connection; unregister or rename"),
+                                   name))
+             }
+             stop(e)
+           })
   .duckdf$classes[[name]] <- class(df)[1]
   invisible(name)
 }
@@ -80,9 +88,11 @@ with_registered_views <- function(dfs, expr) {
 
 # Rule 6: on-disk paths get a dedicated per-operation connection,
 # disconnect-with-shutdown on every exit path (rule 7); the shared
-# in-memory connection is never pointed at a file
-with_disk_con <- function(db_name, fn) {
-  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = db_name, read_only = FALSE)
+# in-memory connection is never pointed at a file. Read-only for
+# pure readers (battery F11: gander never writes)
+with_disk_con <- function(db_name, fn, read_only = FALSE) {
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = db_name,
+                        read_only = read_only)
   on.exit({
     if (DBI::dbIsValid(con)) {
       tryCatch(DBI::dbDisconnect(con, shutdown = TRUE), error = function(err) NULL)

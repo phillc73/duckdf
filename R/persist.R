@@ -114,6 +114,12 @@ persist <- function(query, db_name = NULL, df = NULL, df_name = NULL,
     create <- TRUE
   } else {
     create <- !file.exists(db_name)
+    if (!create && (!is.null(df) || !is.null(df_name))) {
+      # battery F7, owner decision: silent data-source switch is a trap
+      duckdf_stop("input_error",
+        sprintf(paste0("database '%s' already exists; df and df_name ",
+                       "are used only when creating it"), db_name))
+    }
     tables <- if (create) duckdf_resolve_tables(query, df, df_name, env) else list()
   }
 

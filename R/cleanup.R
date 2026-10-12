@@ -1,39 +1,42 @@
+# duckdf - SQL for dataframes on DuckDB (AGPL-3)
+# cleanup(): removes the named on-disk database and sidecar files;
+# also closes the shared connection (spec-lifecycle-and-errors.md
+# rule 4). Returns the files removed, invisibly.
+
 #' Clean up your duckdbs
 #'
-#' \code{cleanup} removes all traces of the named duckdb database
-#'   from disk
+#' \code{cleanup} removes all traces of the named duckdb database from
+#'   disk and closes the shared in-memory connection.
 #'
-#' @param query String. The specific name of the duckdb database to
-#'   be removed. Required. Default is an empty string.
-#' 
-#' @return If the database is found in the current working directory,
-#'   this function removes the database, .wal and .tmp files
-#'   corresponding to this name.
+#' @param db_name String. The specific name of the duckdb database to
+#'   be removed. Required.
+#'
+#' @return Invisibly, the character vector of files removed. Missing
+#'   files are not errors.
 #'
 #' @examples
 #' \dontrun{
-#' 
+#'
 #' # Query the mtcars dataframe and write the whole table to an on-disk duckdb
 #' duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
 #'        persist = TRUE)
-#' 
-#' # Remove all traces of the on-disk duckdb database called mtcars, 
-#' duckdf::cleanup("mtcars")
-#' 
-#'  }
 #'
-#' @export 
-#' 
+#' # Remove all traces of the on-disk duckdb database called mtcars
+#' duckdf::cleanup("mtcars")
+#'
+#' }
+#'
+#' @export
+#'
 
-cleanup <- function(query = "") {
-
-  # check if the files exist and if they do, remove them
-  if (file.exists(query))
-    file.remove(query)
-
-  if (file.exists(paste0(query, ".wal")))
-    file.remove(paste0(query, ".wal"))
-
-  if (file.exists(paste0(query, ".tmp")))
-    file.remove(paste0(query, ".tmp"))
+cleanup <- function(db_name) {
+  assert_input(checkmate::assert_string(db_name, min.chars = 1,
+                                        .var.name = "db_name"))
+  duckdf_shutdown()
+  candidates <- c(db_name, paste0(db_name, ".wal"), paste0(db_name, ".tmp"))
+  existing <- candidates[file.exists(candidates)]
+  if (length(existing) > 0) {
+    file.remove(existing)
+  }
+  invisible(existing)
 }

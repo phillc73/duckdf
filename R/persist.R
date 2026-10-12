@@ -10,6 +10,11 @@ duckdf_resolve_tables <- function(query, df, df_name, env) {
   tables <- list()
   if (!is.null(df)) {
     tables <- c(tables, df)
+    if (is.null(df_name)) {
+      # df names are the extraction candidate scope (mechanism 2):
+      # validation only, the create path registers the whole list
+      table_refs(query, con, names(tables))
+    }
   }
   if (!is.null(df_name)) {
     resolved <- lapply(df_name, function(n) {

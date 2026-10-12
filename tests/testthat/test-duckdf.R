@@ -93,3 +93,30 @@ test_that("a failing query leaves no dangling view, connection reusable", {
   expect_equal(nrow(duckdf_views()), 0)
   expect_equal(duckdf("SELECT 1 AS ok")$ok, 1)
 })
+
+# df given (no df_name): the df names are the extraction candidate
+# scope (spec-table-extraction mechanism 2); out-of-scope references
+# fail as missing_object_error before registration
+test_that("df list is the candidate scope, out-of-scope names error", {
+  df1 <- data.frame(x = 1:3)
+  expect_error(
+    duckdf("SELECT * FROM df1 JOIN outsider ON 1 = 1",
+           df = list(df1 = df1)),
+    regexp = "outsider.*df_name or df",
+    class = "missing_object_error")
+})
+
+test_that("df given with an unparseable query is a parse_error", {
+  expect_error(
+    duckdf("SELECT FROM FROM", df = list(df1 = data.frame(x = 1))),
+    regexp = "syntax error",
+    class = "parse_error")
+})
+
+# df_name stays a full bypass: verbatim registration, extractor
+# not invoked even for an unparseable query
+test_that("df_name bypasses the extractor entirely", {
+  df1 <- data.frame(x = 1:3)
+  res <- duckdf("SELECT * FROM df1", df_name = "df1")
+  expect_equal(nrow(res), 3)
+})

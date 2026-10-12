@@ -57,3 +57,33 @@ test_that("connection is closed on a write error (2021 leak fixed)", {
     expect_true(DBI::dbIsValid(con))
   })
 })
+
+# df given (no df_name): df names are the candidate scope; parse and
+# scope failures surface before any disk work
+test_that("persist df list scopes extraction, out-of-scope errors", {
+  df1 <- data.frame(x = 1:3)
+  expect_error(
+    persist("SELECT * FROM df1 JOIN outsider ON 1 = 1",
+            df = list(df1 = df1)),
+    regexp = "outsider.*df_name or df",
+    class = "missing_object_error")
+})
+
+test_that("persist df given with an unparseable query is a parse_error", {
+  expect_error(
+    persist("SELECT FROM FROM", df = list(df1 = data.frame(x = 1))),
+    regexp = "syntax error",
+    class = "parse_error")
+})
+
+test_that("persist db_name-given create path also scopes extraction", {
+  df1 <- data.frame(x = 1:3)
+  withr::with_dir(tempdir(), {
+    expect_error(
+      persist("SELECT * FROM df1 JOIN outsider ON 1 = 1",
+              db_name = "scope_test.duckdb", df = list(df1 = df1)),
+      regexp = "outsider.*df_name or df",
+      class = "missing_object_error")
+    expect_false(file.exists("scope_test.duckdb"))
+  })
+})

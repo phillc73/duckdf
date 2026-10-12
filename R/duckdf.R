@@ -104,6 +104,11 @@ duckdf <- function(query, persist = FALSE, df_name = NULL, df = NULL,
   dfs <- list()
   if (!is.null(df)) {
     dfs <- c(dfs, df)
+    if (is.null(df_name)) {
+      # df names are the extraction candidate scope (mechanism 2):
+      # parse and scope failures surface before registration
+      table_refs(query, duckdf_con(), names(dfs))
+    }
   }
   if (!is.null(df_name)) {
     resolved <- lapply(df_name, function(n) {

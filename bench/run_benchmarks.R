@@ -1,4 +1,4 @@
-# duckdf 0.2.0 benchmark harness: GPL-3, see README
+# duckdf 0.2.0 benchmark harness: AGPL-3, see README
 # Four fixed tasks, seven arms, per docs/duckdf-020/bench-gate-inputs.md
 
 # Data --------------------------------------------------------------------

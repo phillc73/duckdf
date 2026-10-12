@@ -1,5 +1,5 @@
 # Harness smoke test: tiny data, all constructible arms, no long timings
-# GPL-3, see README
+# AGPL-3, see README
 
 test_that("bench harness runs all constructible arms on tiny data", {
   skip_if_not_installed("duckdb")

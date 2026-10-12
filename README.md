@@ -9,17 +9,17 @@ It's also meant to be a bit of fun.
 
 ## A note on ducks, and the tidyverse
 
-`duckdf` has zero tidyverse dependencies. Not one. This is a specific, deliberate design choice, made playfully and with real affection for the tidyverse packages themselves, which are excellent at what they do. The frame is simple: some of us want SQL strings, an R dataframe in, an R dataframe out, and a dependency tree a duck could waddle across without getting tired. If your dependency tree has more branches than a wetland, that is fine, that is even good, but it is not this package. Because that's better for ducks.
+`duckdf` has zero tidyverse dependencies. Not one. This is a specific, deliberate design choice. Some of us want SQL strings, an R dataframe in, an R dataframe out and a naked dependency tree (ideal for ducks).
 
 The benchmark arms (dplyr, dbplyr, duckplyr) appear in `Suggests` only, so the comparisons below can be reproduced. They are never loaded by `duckdf` itself.
 
 ## Lineage
 
-The idea is old: `sqldf` has been letting R users write SQL against dataframes since 2007, by copying everything into SQLite on every query. The original `duckdf` (v0.1.2, March 2021) took that idea and pointed it at DuckDB, registering dataframes as zero-copy views instead of copying them. It was fast, it quacked, and then life happened and it sat dormant while DuckDB grew enormously.
+The idea is old: `sqldf` has been letting R users write SQL against dataframes since 2007. The original `duckdf` (v0.1.2, March 2021) took that idea and pointed it at DuckDB, registering dataframes as zero-copy views instead of copying them. It was fast, it quacked, and then life happened and it sat dormant while DuckDB grew enormously.
 
-0.2.0 is the resurrection: the same five functions (`duckdf`, `gander`, `ingest`, `persist`, `cleanup`) plus a new sixth (`duckdf_views`), rebuilt for duckdb-r 1.5.6 and later. Table names now come from DuckDB's own parse tree rather than string splitting on the word FROM, which means subqueries, joins, CTEs and quoted identifiers all just work. There is a lot of new stuff in 0.1.2's old `duckdf` that has been superseded, which the triage of the old issues records, but the quack remains.
+0.2.0 is the resurrection: the same five functions (`duckdf`, `gander`, `ingest`, `persist`, `cleanup`) plus a new sixth (`duckdf_views`), rebuilt for duckdb-r 1.5.6 and later. Table names now come from DuckDB's own parse tree rather than string splitting on the word FROM, which means subqueries, joins, CTEs and quoted identifiers all just work. There is a lot of new stuff and some things in 0.1.2's old `duckdf` that have been superseded, which the triage of the old issues records, but the quack remains.
 
-## Quick Start
+## Quack Start
 
 R 4.2.0 or later, and [duckdb](https://duckdb.org/) 1.5.6 or later (the package pins `duckdb (>= 1.5.6)`):
 
@@ -60,7 +60,7 @@ duckdf("SELECT mpg, cyl FROM mtcars WHERE disp >= 200",
        df_name = "mtcars")
 ```
 
-`df_name` skips the extraction entirely and registers verbatim. Because of that it is also the escape hatch: multi-statement queries and DDL (`CREATE TABLE ...`) work here and nowhere else. Two caveats worth knowing: a table created this way stays on the shared connection, invisible to `duckdf_views()` (which lists registered views only), and only `cleanup()` clears it. Useful for a deliberate `CREATE OR REPLACE TABLE ... AS SELECT`, just tidy up afterwards.
+`df_name` skips the extraction entirely and registers verbatim. Because of that it is also the escape route: multi-statement queries and DDL (`CREATE TABLE ...`) work here and nowhere else. Two caveats worth knowing: a table created this way stays on the shared connection, invisible to `duckdf_views()` (which lists registered views only), and only `cleanup()` clears it. Useful for a deliberate `CREATE OR REPLACE TABLE ... AS SELECT`, just tidy up afterwards.
 
 Inside functions, or anywhere the caller's scope is not where your dataframes live, pass them as a named list - those names become the extraction scope, so nothing outside the list is registered:
 
@@ -129,7 +129,7 @@ duckdf::gander("mtcars")
 duckdf::gander("mtcars", show_types = TRUE)
 ```
 
-Returns a named list holding the first five rows of every table in the database; `show_types = TRUE` adds the column types. Any number of tables (0.1.2 capped at two, arbitrarily; that cap has flown away). A missing database is an error naming the path checked, not a message string pretending to be a result.
+Returns a named list holding the first five rows of every table in the database; `show_types = TRUE` adds the column types. Any number of tables (0.1.2 capped at two, arbitrarily; that cap has waddled away). A missing database is an error naming the path checked, not a message string pretending to be a result.
 
 ### ingest
 
@@ -151,7 +151,7 @@ mtcars2 <- duckdf::ingest(name = "mtcars2",
 
 ### cleanup
 
-Removes all traces of the named on-disk DuckDB database (the file plus any `.wal`/`.tmp` sidecars) from the current working directory, and closes the shared connection. Returns, invisibly, the vector of files it removed - missing files are not an error, so no quacking about it.
+Removes all traces of the named on-disk DuckDB database (the file plus any `.wal`/`.tmp` sidecars) from the current working directory, and closes the shared connection. Returns, invisibly, the vector of files it removed - missing files are not an error.
 
 ```r
 duckdf::cleanup("mtcars")
@@ -167,7 +167,7 @@ A read-only listing of the views currently registered on the shared connection: 
 
 ## Benchmarks
 
-Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good, with one honest asterisk.
+Is this package any good? If some measure of good is the speed at which results are returned, then this package is reasonably good.
 
 The full harness lives in `bench/run_benchmarks.R` (seven arms, four fixed tasks, cold/warm split, memory recorded, results checked for equivalence before anything is timed) and its output article in `bench/results.md`. Warm medians, in milliseconds, from the single official run on a full-time Linux machine:
 
@@ -181,20 +181,20 @@ The full harness lives in `bench/run_benchmarks.R` (seven arms, four fixed tasks
 | duckplyr | 4.5 | 80 | 236 | 58 |
 | dbplyr + duckdb | 50 | 80 | 143 | 136 |
 
-Reading it honestly:
+Reviewing these numbers with clarity:
 
-- Against raw duckdb-r (the wrapper-overhead self-gate), duckdf is within the 1.10x band on the 1M-row tasks: 0.98x, 0.84x and 1.05x. On the trivial SELECT it is 1.82x - the extraction cost dominates a 2.9 ms call, and we state that failure plainly rather than hiding it. If you want to fly as fast as possible on tiny queries, use `df_name`.
+- Against raw duckdb-r (the wrapper-overhead self-gate), duckdf is within the 1.10x band on the 1M-row tasks: 0.98x, 0.84x and 1.05x. On the trivial SELECT it is 1.82x - the extraction cost dominates a 2.9 ms call and that failure is stated plainly rather than hiding it. If you want to fly as fast as possible on tiny queries, use `df_name`.
 - Against sqldf, duckdf is 5.7x to 12.2x faster warm, on every task. The gap lives in the model, not the warm-up: sqldf imports your dataframe into SQLite on every query.
 - data.table remains much, much faster than everything on this table. In fact, if you'd like to query a `data.table` more slowly, `duckdf` can support that too - and with `as.data.table = TRUE` it will even hand the result back as one.
 - Memory is where zero-copy registration shows: duckdf allocates about 1.8 KB per query on the 1M-row tasks, against data.table's 28-65 MB and dplyr's 43-109 MB of materialisation.
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results. The harness is in the package precisely so you can produce your own.
 
-But wait, there's more: [older 2021 benchmarks](duckdf_benchmarks.png) (and the [tidyquery comparison](vs_tidyquery_benchmarks.png)) are kept in the repository as historical artifacts, from when duckdb was 0.2.4 and this package was a younger duck.
+Ancient stuff: [older 2021 benchmarks](duckdf_benchmarks.png) (and the [tidyquery comparison](vs_tidyquery_benchmarks.png)) are kept in the repository as historical artifacts, from when duckdb was 0.2.4 and this package was a duckling.
 
-## AI assistance
+## Artificial Duck Assistance
 
-The code in this repository was written with the assistance of a large language model and reviewed by its maintainer.
+The code in this repository was written with the assistance of a large language duck and reviewed by its maintainer. The update wouldn't have happened without, so don't quack about it.
 
 ## License
 

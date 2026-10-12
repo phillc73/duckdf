@@ -1,8 +1,8 @@
-# Battery triage tests (attack-brief-findings.md F1-F11, owner
-# decisions 2026-10-12: F2 reject, F7 error)
+# Contract-edge tests: engine passthrough, escape hatches and guards
+# settled 2026-10-12
 
-# F1: non-collision registration failures keep their engine error;
-# the collision check runs only on the error path now
+# Non-collision registration failures keep their engine error; the
+# collision check runs only on the error path
 test_that("non-collision register failures stay engine errors", {
   df_bad <- data.frame(x = 1:2)
   df_bad$cc <- list(complex(1, 2), complex(3, 4))
@@ -14,8 +14,7 @@ test_that("non-collision register failures stay engine errors", {
   expect_false("bad_df" %in% views$view_name)
 })
 
-# F2: multi-statement queries are rejected (owner decision:
-# reject, not silent last-wins)
+# Multi-statement queries are rejected, not silent last-wins
 test_that("multi-statement queries are input_error", {
   mtcars <- datasets::mtcars
   expect_error(
@@ -28,7 +27,7 @@ test_that("multi-statement queries are input_error", {
     class = "input_error")
 })
 
-# F3: non-SELECT via the extractor is parse_error with a message
+# Non-SELECT via the extractor is parse_error with a message
 # directing to df_name, not a false "could not parse"
 test_that("non-SELECT queries direct to df_name, no false parse claim", {
   expect_error(
@@ -37,16 +36,16 @@ test_that("non-SELECT queries direct to df_name, no false parse claim", {
     class = "parse_error")
 })
 
-# F4/F2 companion: the df_name bypass keeps raw DBI semantics -
-# multi-statement runs there (documented escape hatch)
-test_that("df_name bypass retains multi-statement raw behavior", {
+# The df_name bypass keeps raw DBI semantics - multi-statement runs
+# there (documented escape hatch)
+test_that("df_name bypass retains multi-statement raw behaviour", {
   df1 <- data.frame(x = 1:3)
   res <- duckdf("SELECT COUNT(*) AS n FROM df1; SELECT COUNT(*) AS n2 FROM df1",
                 df_name = "df1")
   expect_equal(res$n2, 3)
 })
 
-# F5: table names containing a double quote do not break gander
+# Table names containing a double quote do not break gander
 test_that("gander survives quote-bearing table names", {
   path <- file.path(tempdir(), "quote_test.duckdb")
   on.exit(unlink(c(path, paste0(path, ".wal"), paste0(path, ".tmp"))),
@@ -59,8 +58,8 @@ test_that("gander survives quote-bearing table names", {
   expect_equal(nrow(res[["we\"ird"]]), 2)
 })
 
-# F7: persist onto an existing database with df/df_name given is an
-# error, not a silent data-source switch (owner decision: error)
+# persist onto an existing database with df/df_name given is an
+# error, not a silent data-source switch
 test_that("persist existing db plus df is input_error", {
   path <- file.path(tempdir(), "exists_test.duckdb")
   on.exit(unlink(c(path, paste0(path, ".wal"), paste0(path, ".tmp"))),
@@ -75,7 +74,7 @@ test_that("persist existing db plus df is input_error", {
     class = "input_error")
 })
 
-# F11: gander opens on-disk databases read-only
+# gander opens on-disk databases read-only
 test_that("read-only disk connections refuse writes", {
   path <- file.path(tempdir(), "ro_test.duckdb")
   on.exit(unlink(c(path, paste0(path, ".wal"), paste0(path, ".tmp"))),

@@ -45,13 +45,13 @@ gander <- function(db_name, show_types = FALSE) {
   tables <- with_disk_con(db_name, function(con) {
     names <- DBI::dbListTables(con)
     out <- lapply(names, function(t) {
-      # battery F5: table names are identifiers, never raw
-      # interpolation - double-quote escaping
+      # table names are identifiers, never raw interpolation -
+      # double-quote escaping
       quoted <- paste0('"', gsub('"', '""', t), '"')
       head <- DBI::dbGetQuery(con,
         sprintf("SELECT * FROM %s LIMIT 5", quoted))
       if (isTRUE(show_types)) {
-        # battery F6: type metadata only when asked for
+        # type metadata only when asked for
         types <- DBI::dbGetQuery(con,
           paste0("SELECT column_name, data_type FROM ",
                  "information_schema.columns WHERE table_name = ?"),

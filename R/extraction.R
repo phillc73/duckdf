@@ -17,8 +17,8 @@ duckdf_serialize_sql <- function(con, query) {
   tree <- jsonlite::fromJSON(ast$j, simplifyVector = FALSE)
   if (isTRUE(tree$error)) {
     if (identical(tree$error_type, "not implemented")) {
-      # battery F3: the engine parsed it, the serializer cannot
-      # serialize it - no false parse claim, direct to the bypass
+      # the engine parsed it, the serializer cannot serialize it -
+      # no false parse claim, direct to the bypass
       duckdf_stop("parse_error",
         paste0(tree$error_message,
                "; use df_name to run non-SELECT statements"))
@@ -147,7 +147,7 @@ table_refs <- function(query, con, candidates = NULL) {
   assert_input(checkmate::assert_character(candidates, any.missing = FALSE,
     null.ok = TRUE, .var.name = "candidates"))
   ast <- duckdf_serialize_sql(con, query)
-  # battery F2, owner decision: silent last-wins becomes a rejection
+  # silent last-wins becomes a rejection
   if (length(ast) > 1) {
     duckdf_stop("input_error", "query must contain a single statement")
   }

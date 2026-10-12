@@ -46,8 +46,8 @@ duckdf_shutdown <- function(e = .duckdf) {
 
 # Rule 8: a name already visible as a view is a collision error, not a
 # silent overwrite (0.1.2 behaviour). The check runs only on the
-# engine's own re-register error (battery F1: a precheck round trip
-# cost 1.21 ms per registration)
+# engine's own re-register error (a precheck round trip costs
+# 1.21 ms per registration)
 duckdf_register_view <- function(con, name, df) {
   tryCatch(duckdb::duckdb_register(con, name, df),
            error = function(e) {
@@ -89,7 +89,7 @@ with_registered_views <- function(dfs, expr) {
 # Rule 6: on-disk paths get a dedicated per-operation connection,
 # disconnect-with-shutdown on every exit path (rule 7); the shared
 # in-memory connection is never pointed at a file. Read-only for
-# pure readers (battery F11: gander never writes)
+# pure readers (gander never writes)
 with_disk_con <- function(db_name, fn, read_only = FALSE) {
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = db_name,
                         read_only = read_only)

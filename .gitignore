@@ -4,3 +4,4 @@
 .Rproj.user
 .Rhistory
 .RData
+bench/bench_out.rds

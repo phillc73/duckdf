@@ -4,8 +4,17 @@ Title: SQL for Dataframes, but with Ducks
 Version: 0.2.1
 Authors@R: person("Phill", "Clarke", email = "phill@mimosadev.org",
     role = c("aut", "cre"))
-Description: SQL for R dataframes, with ducks.
-License: AGPL-3 | file LICENSE
+Description: An SQL interface for R dataframes built on the DuckDB embedded
+    analytical database. Dataframes are registered directly with an in-process
+    DuckDB instance and queried with standard SQL, so analyses can join,
+    filter, aggregate and reshape R objects with SQL while results are
+    returned as dataframes, without copying data to an external database
+    server. The package wraps the 'duckdb' R package with a DBI-compliant
+    connection and provides a small, checked surface for the common
+    register-query-unregister workflow. The underlying engine and its
+    vectorised execution model are described in Raasveldt and Mühleisen
+    (2019) <doi:10.1145/3299869.3320212>.
+License: AGPL-3
 Encoding: UTF-8
 Depends:
     R (>= 4.2.0)

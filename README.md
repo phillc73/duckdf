@@ -27,7 +27,13 @@ R 4.2.0 or later, and [duckdb](https://duckdb.org/) 1.5.6 or later (the package 
 install.packages("duckdb")
 ```
 
-Then install `duckdf` with the `remotes` package:
+`duckdf` is on CRAN:
+
+```r
+install.packages("duckdf")
+```
+
+Or the development version from GitHub, with the `remotes` package:
 
 ```r
 # install.packages("remotes")
@@ -153,7 +159,7 @@ mtcars2 <- duckdf::ingest(name = "mtcars2",
                           object_type = "data.table")
 ```
 
-`ingest` passes every `duckdb_read_csv` option through unchanged (`header`, `na.strings`, `nrow.check`, `delim`, `quote`, `col.names`, `lower.case.names`, `sep`, `transaction`). With `persist = FALSE` it returns the data as `object_type` (`data.frame` by default, `data.table` or `tibble` also welcome) and assigns nothing anywhere - callers capture the return value. Two honest notes on the `persist = TRUE` path: it returns `duckdb_read_csv`'s own result invisibly (a side-effect function), and calling it again with the same `name` on the same existing database re-reads the CSV into the existing table - the rows add up, they do not replace. Remove the database first (`cleanup()`) for a fresh ingest. Also, `duckdb_read_csv` itself leaves an empty file named `duckdb` in the working directory; that is duckdb-r behaviour, not something `duckdf` can tidy.
+`ingest` passes every `duckdb_read_csv` option through unchanged (`header`, `na.strings`, `nrow.check`, `delim`, `quote`, `col.names`, `lower.case.names`, `sep`, `transaction`). With `persist = FALSE` it returns the data as `object_type` (`data.frame` by default, `data.table` or `tibble` also welcome) and assigns nothing anywhere - callers capture the return value. Two notes on the `persist = TRUE` path: it returns `duckdb_read_csv`'s own result invisibly (a side-effect function), and calling it again with the same `name` on the same existing database re-reads the CSV into the existing table - the rows add up, they do not replace. Remove the database first (`cleanup()`) for a fresh ingest. Also, `duckdb_read_csv` itself leaves an empty file named `duckdb` in the working directory; that is duckdb-r behaviour, not something `duckdf` can tidy.
 
 ### cleanup
 
@@ -213,7 +219,7 @@ Reviewing these numbers with clarity:
 
 Of course there are lies, damn lies and benchmarks. Different datasets, of different size or different column types, using different queries, may produce entirely different results. The harness is in the package precisely so you can produce your own.
 
-Ancient stuff: [older 2021 benchmarks](https://github.com/phillc73/duckdf/blob/master/duckdf_benchmarks.png) (and the [tidyquery comparison](https://github.com/phillc73/duckdf/blob/master/vs_tidyquery_benchmarks.png)) are kept in the repository as historical artifacts, from when duckdb was 0.2.4 and this package was a duckling.
+Ancient stuff: [older 2021 benchmarks](https://github.com/phillc73/duckdf/blob/master/duckdf_benchmarks.png) (and the [tidyquery comparison](https://github.com/phillc73/duckdf/blob/master/vs_tidyquery_benchmarks.png)) are kept in the repository as historical artefacts, from when duckdb was 0.2.4 and this package was a duckling.
 
 ## Artificial Duck Assistance
 
